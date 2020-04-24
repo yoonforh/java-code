@@ -1,0 +1,2949 @@
+/*
+ * $Id$
+ *
+ * Copyright (c) 2003 by Yoon Kyung Koo.
+ * All rights reserved.
+ * 
+ * This software is the confidential and proprietary information
+ * of Yoon Kyung Koo("Confidential Information").  You
+ * shall not disclose such Confidential Information and shall use
+ * it only in accordance with the terms of the license agreement
+ * you entered into with Yoon Kyung Koo.
+ */
+
+options {
+    IGNORE_CASE = true;
+    DEBUG_PARSER = true;
+}
+
+PARSER_BEGIN(OracleCreateTableParser)
+
+
+package yoonforh.codegen.parser;
+
+import java.io.*;
+
+/**
+ * refer to Oracle 9i SQL reference
+ *
+ * @version  $Revision$<br>
+ *           created at 2003-04-14 15:21:19
+ * @author   Yoon Kyung Koo
+ */
+
+public class OracleCreateTableParser {
+    public static void main(String[] args) throws ParseException, IOException {
+	if (args.length < 1) {
+	    System.err.println("usage : java OracleCreateTableParser <sql file name>");
+	    System.exit(0);
+	}
+	OracleCreateTableParser parser = new OracleCreateTableParser(new FileInputStream(args[0]));
+	SimpleNode node = parser.SQLSheet();
+	node.dump("");
+    }
+}
+
+PARSER_END(OracleCreateTableParser)
+
+/* WHITE SPACE */
+
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+| "\f"
+}
+
+/* COMMENTS */
+
+MORE :
+{
+  "--" : IN_SINGLE_LINE_COMMENT
+|
+  "/*" : IN_MULTI_LINE_COMMENT
+}
+
+<IN_SINGLE_LINE_COMMENT>
+SPECIAL_TOKEN :
+{
+  <SINGLE_LINE_COMMENT: "\n" | "\r" | "\r\n" > : DEFAULT
+}
+
+<IN_MULTI_LINE_COMMENT>
+SPECIAL_TOKEN :
+{
+  <MULTI_LINE_COMMENT: "*/" > : DEFAULT
+}
+
+<IN_SINGLE_LINE_COMMENT,IN_MULTI_LINE_COMMENT>
+MORE :
+{
+  < ~[] >
+}
+
+<UNSUPPORTED_STATEMENT>
+SPECIAL_TOKEN :
+{
+  <END_OF_STATEMENT : ";" | "/" > : DEFAULT
+}
+
+<UNSUPPORTED_STATEMENT>
+MORE :
+{
+  < ~[] >
+}
+
+/* ORACLE 9i RESERVED WORDS */
+TOKEN :
+{
+  < ACCESS : "access" >
+| < ADD : "add" >
+| < ALL : "all" >
+| < ALTER : "alter" >
+| < AND : "and" >
+| < ANY : "any" >
+| < AS : "as" >
+| < ASC : "asc" >
+| < AUDIT : "audit" >
+| < BETWEEN : "between" >
+| < BY : "by" >
+| < CHAR : "char" >
+| < CHECK : "check" >
+| < CLUSTER : "cluster" >
+| < COLUMN : "column" >
+| < COMMENT : "comment" >
+| < COMPRESS : "compress" >
+| < CONNECT : "connect" >
+| < CREATE : "create" >
+| < CURRENT : "current" >
+| < DATE : "date" >
+| < DECIMAL : "decimal" >
+| < DEFAULT_STRING : "default" >
+| < DELETE : "delete" >
+| < DESC : "desc" >
+| < DISTINCT : "distinct" >
+| < DROP : "drop" >
+| < ELSE : "else" >
+| < EXCLUSIVE : "exclusive" >
+| < EXISTS : "exists" >
+| < FILE : "file" >
+| < FLOAT : "float" >
+| < FOR : "for" >
+| < FROM : "from" >
+| < GRANT : "grant" >
+| < GROUP : "group" >
+| < HAVING : "having" >
+| < IDENTIFIED : "identified" >
+| < IMMEDIATE : "immediate" >
+| < IN : "in" >
+| < INCREMENT : "increment" >
+| < INDEX : "index" >
+| < INITIAL : "initial" >
+| < INSERT : "insert" >
+| < INTEGER : "integer" >
+| < INTERSECT : "intersect" >
+| < INTO : "into" >
+| < IS : "is" >
+| < LEVEL : "level" >
+| < LIKE : "like" >
+| < LOCK : "lock" >
+| < LONG : "long" >
+| < MAXEXTENTS : "maxextents" >
+| < MINUS : "minus" >
+| < MLSLABEL : "mlslabel" >
+| < MODE : "mode" >
+| < MODIFY : "modify" >
+| < NOAUDIT : "noaudit" >
+| < NOCOMPRESS : "nocompress" >
+| < NOT : "not" >
+| < NOWAIT : "nowait" >
+| < NULL : "null" >
+| < NUMBER : "number" >
+| < OF : "of" >
+| < OFFLINE : "offline" >
+| < ON : "on" >
+| < ONLINE : "online" >
+| < OPTION : "option" >
+| < OR : "or" >
+| < ORDER : "order" >
+| < PCTFREE : "pctfree" >
+| < PRIOR : "prior" >
+| < PRIVILEGES : "privileges" >
+| < PUBLIC : "public" >
+| < RAW : "raw" >
+| < RENAME : "rename" >
+| < RESOURCE : "resource" >
+| < REVOKE : "revoke" >
+| < ROW : "row" >
+| < ROWID : "rowid" >
+| < ROWNUM : "rownum" >
+| < ROWS : "rows" >
+| < SELECT : "select" >
+| < SESSION : "session" >
+| < SET : "set" >
+| < SHARE : "share" >
+| < SIZE : "size" >
+| < SMALLINT : "smallint" >
+| < START : "start" >
+| < SUCCESSFUL : "successful" >
+| < SYNONYM : "synonym" >
+| < SYSDATE : "sysdate" >
+| < TABLE : "table" >
+| < THEN : "then" >
+| < TO : "to" >
+| < TRIGGER : "trigger" >
+| < UID : "uid" >
+| < UNION : "union" >
+| < UNIQUE : "unique" >
+| < UPDATE : "update" >
+| < USER : "user" >
+| < VALIDATE : "validate" >
+| < VALUES : "values" >
+| < VARCHAR : "varchar" >
+| < VARCHAR2 : "varchar2" >
+| < VIEW : "view" >
+| < WHENEVER : "whenever" >
+| < WHERE : "where" >
+| < WITH : "with" >
+}
+
+/* UNRESERVED KEYWORDS */
+
+TOKEN :
+{
+  < ALWAYS : "always" >
+| < ANALYZE : "analyze" >
+| < ASSOCIATE : "associate" >
+| < AT : "at" >
+| < BFILE : "bfile" >
+| < BITMAP : "bitmap" >
+| < BLOB : "blob" >
+| < BUFFER_POOL : "buffer_pool" >
+| < BYTE : "byte" >
+| < CACHE : "cache" >
+| < CALL : "call" >
+| < CASCADE : "cascade" >
+| < CASE : "case" >
+| < CHARACTER : "character" >
+| < CHUNK : "chunk" >
+| < CLOB : "clob" >
+| < COLUMN_VALUE : "column_value" >
+| < COMMIT : "commit" >
+| < COMPUTE : "compute" >
+| < CONSTRAINT : "constraint" >
+| < CUBE : "cube" >
+| < CURRVAL : "currval" >
+| < CURSOR : "cursor" >
+| < DAY : "day" >
+| < DBTIMEZONE : "dbtimezone" >
+| < DEC : "dec" >
+| < DEFERRABLE : "deferrable" >
+| < DEFERRED : "deferred" >
+| < DIRECTORY : "directory" >
+| < DISABLE : "disable" >
+| < DISASSOCIATE : "disassociate" >
+| < DOUBLE : "double" >
+| < ELEMENT : "element" >
+| < ENABLE : "enable" >
+| < END : "end" >
+| < EQUALS_PATH : "equals_path" >
+| < ESCAPE : "escape" >
+| < EXCEPTIONS : "exceptions" >
+| < EXPLAIN : "explain" >
+| < EXTERNAL : "external" >
+| < FIRST : "first" >
+| < FOREIGN : "foreign" >
+| < FREELIST : "freelist" >
+| < FREELISTS : "freelists" >
+| < FREEPOOLS : "freepools" >
+| < GLOBAL : "global" >
+| < GROUPING : "grouping" >
+| < GROUPS : "groups" >
+| < HASH : "hash" >
+| < HEAP : "heap" >
+| < HH : "hh" >
+| < INCLUDING : "including" >
+| < INDEXTYPE : "indextype" >
+| < INDICATOR : "indicator" >
+| < INITIALLY : "initially" >
+| < INITRANS : "initrans" >
+| < INT : "int" >
+| < INTERVAL : "interval" >
+| < KEEP : "keep" >
+| < KEY : "key" >
+| < LAST : "last" >
+| < LESS_STRING : "less" >
+| < LEVELS : "levels" >
+| < LIKE2 : "like2" >
+| < LIKE4 : "like4" >
+| < LIKEC : "likec" >
+| < LIMIT : "limit" >
+| < LIST : "list" >
+| < LOB : "lob" >
+| < LOCAL : "local" >
+| < LOCATION : "location" >
+| < LOCATOR : "locator" >
+| < LOG : "log" >
+| < LOGGING : "logging" >
+| < MAPPING : "mapping" >
+| < MAXTRANS : "maxtrans" >
+| < MAXVALUE : "maxvalue" >
+| < MERGE : "merge" >
+| < MINEXTENTS : "minextents" >
+| < MM : "mm" >
+| < MONITORING : "monitoring" >
+| < MONTH : "month" >
+| < MOVEMENT : "movement" >
+| < NATIONAL : "national" >
+| < NCHAR : "nchar" >
+| < NCLOB : "nclob" >
+| < NESTED : "nested" >
+| < NEW : "new" >
+| < NEXT : "next" >
+| < NEXTVAL : "nextval" >
+| < NOCACHE : "nocache" >
+| < NOLOGGING : "nologging" >
+| < NOMAPPING : "nomapping" >
+| < NOMONITORING : "nomonitoring" >
+| < NOPARALLEL : "noparallel" >
+| < NORELY : "norely" >
+| < NOROWDEPENDENCIES : "norowdependencies" >
+| < NOSORT : "nosort" >
+| < NOVALIDATE : "novalidate" >
+| < NULLS : "nulls" >
+| < NUMERIC : "numeric" >
+| < NVARCHAR2 : "nvarchar2" >
+| < OBJECT : "object" >
+| < ONLY : "only" >
+| < OPTIMAL : "optimal" >
+| < ORGANIZATION : "organization" >
+| < OVERFLOW : "overflow" >
+| < PARALLEL : "parallel" >
+| < PARAMETERS : "parameters" >
+| < PARTITION : "partition" >
+| < PARTITIONS : "partitions" >
+| < PCTHRESHOLD : "pcthreshold" >
+| < PCTINCREASE : "pctincrease" >
+| < PCTUSED : "pctused" >
+| < PCTVERSION : "pctversion" >
+| < PRECISION : "precision" >
+| < PRESERVE : "preserve" >
+| < PRIMARY : "primary" >
+| < QUOTE : "'" >
+| < RANGE : "range" >
+| < READS : "reads" >
+| < REAL : "real" >
+| < RECYCLE : "recycle" >
+| < REF : "ref" >
+| < REFERENCES : "references" >
+| < REJECT : "reject" >
+| < RELATIONAL : "relational" >
+| < RELY : "rely" >
+| < RETENTION : "retention" >
+| < RETURN : "return" >
+| < REVERSE : "reverse" >
+| < ROLLBACK : "rollback" >
+| < ROLLUP : "rollup" >
+| < ROWDEPENDENCIES : "rowdependencies" >
+| < SAVEPOINT : "savepoint" >
+| < SCOPE : "scope" >
+| < SECOND : "second" >
+| < SESSIONTIMEZONE : "sessiontimezone" >
+| < SETS : "sets" >
+| < SHARP : "#" >
+| < SIBLINGS : "siblings" >
+| < SOME : "some" >
+| < SORT : "sort" >
+| < STATISTICS : "statistics" >
+| < STORAGE : "storage" >
+| < STORE : "store" >
+| < SUBPARTITION : "subpartition" >
+| < SUBPARTITIONS : "subpartitions" >
+| < SUBSTITUTABLE : "substitutable" >
+| < SUPPLEMENTAL : "supplemental" >
+| < TABLESPACE : "tablespace" >
+| < TEMPLATE : "template" >
+| < TEMPORARY : "temporary" >
+| < THAN : "than" >
+| < TIME : "time" >
+| < TIMESTAMP : "timestamp" >
+| < TRUNCATE : "truncate" >
+| < TYPE : "type" >
+| < UNDER_PATH : "under_path" >
+| < UNLIMITED : "unlimited" >
+| < UROWID : "urowid" >
+| < USING : "using" >
+| < VALUE : "value" >
+| < VARRAY : "varray" >
+| < VARYING : "varying" >
+| < WHEN : "when" >
+| < XMLSCHEMA : "xmlschema" >
+| < XMLTYPE : "xmltype" >
+| < YEAR : "year" >
+| < ZONE : "zone" >
+}
+
+TOKEN:  /* Separators and operators */
+{
+    < ASSIGN: ":=" >
+  | < CONCAT: "||" >
+  | < SEMICOLON: ";" >
+  | < DOT: "." >
+  | < ROWTYPE: "%ROWTYPE" >
+  | < TILDE: "~" >
+  | < JOINPLUS: "(+)" >
+  | < OPENPAREN: "(" >
+  | < CLOSEPAREN: ")" >
+  | < ASTERISK: "*" >
+  | < SLASH: "/" >
+  | < PLUS: "+" >
+  | < MINUS_OP: "-" >
+  | < QUESTIONMARK: "?" >
+  | < LESS: "<" >
+  | < LESSEQUAL: "<=" >
+  | < GREATER: ">" >
+  | < GREATEREQUAL: ">=" >
+  | < EQUAL: "=" >
+  | < NOTEQUAL: "!=" >
+  | < NOTEQUAL2: "<>" >
+}
+
+/* IDENTIFIER */
+TOKEN:
+{
+	< IDENTIFIER: ( <LETTER> )+ ( <DIGIT> | <LETTER> |<SPECIAL_CHARS>)* >
+| 	< LETTER: ["a"-"z", "A"-"Z"] >
+|   < #SPECIAL_CHARS: "$" | "_">
+|   < BIND: ":" <IDENTIFIER> ("." <IDENTIFIER>)? >
+|   < CHAR_LITERAL: "'" (~["'"])* "'" ("'" (~["'"])* "'")*>
+|   < QUOTED_IDENTIFIER: "\"" (~["\n","\r","\""])* "\"" >
+}
+
+/* Numeric Constants */
+TOKEN:
+{
+    < DIGIT : [ "0" - "9" ] >
+}
+
+/***********************************************
+ * THE ORACLE CREATE TABLE GRAMMAR STARTS HERE *
+ ***********************************************/
+
+SimpleNode SQLSheet() :
+{}
+{
+    (
+      (
+        LOOKAHEAD(4)
+          CreateTableStatement() ( "/" | ";" )
+      | LOOKAHEAD(3)
+          CreateIndexStatement() ( "/" | ";" )
+      | SkipUnsupportedStatement()
+      )
+      
+    )*
+    <EOF>
+   {
+       return jjtThis;
+   }
+}
+
+/*
+ * here we only deal with relation table creation
+ */
+void CreateTableStatement() :
+{}
+{
+    "create" [ "global" "temporary" ] 
+    "table" [ LOOKAHEAD(2) Schema() "." ]
+    Table()
+    [ "(" RelationalProperties() ")" ]
+    [ "on" "commit" ( "delete" | "preserve" ) "rows" ]
+    (LOOKAHEAD( PhysicalProperties() ) PhysicalProperties() | {})
+    (LOOKAHEAD( TableProperties() ) TableProperties() | {})
+}
+
+/*
+JAVACODE
+void SkipUnsupportedStatement() {
+  Token t;
+
+  System.out.println("Unsupported statement ---");
+  while (true) {
+      t = getToken(1);
+      if ("/".equals(t.image) || ";".equals(t.image)) {
+	  return;
+      }
+      System.out.print(t.image);
+      System.out.print(" ");
+      t = getNextToken();
+  }
+}
+*/
+
+void SkipUnsupportedStatement() :
+{}
+{
+  (
+    <CREATE> | <ALTER> | <DROP> | <ANALYZE> | <ASSOCIATE> | <AUDIT>
+  | <CALL> | <COMMENT> | <COMMIT> | <DELETE> | <DISASSOCIATE>
+  | <ROLLBACK> | <EXPLAIN> | <GRANT> | <INSERT> | <LOCK> | <MERGE>
+  | <NOAUDIT> | <RENAME> | <REVOKE> | <SAVEPOINT> | <SELECT> | <SET>
+  | <TRUNCATE> | <UPDATE>
+  )
+  {
+    token_source.SwitchTo(UNSUPPORTED_STATEMENT);
+  }
+}
+
+void RelationalProperties() :
+{}
+{
+    RelationalProperty() ( "," RelationalProperty() )*
+}
+
+void RelationalProperty() :
+{}
+{
+  Column() Datatypes() [ "default" Expr() ]
+    (
+      // maybe the reference is wrong. InlineConstraint can be
+      // multiple. think of PRIMARY KEY NOT NULL
+      LOOKAHEAD( InlineConstraint() ) (InlineConstraint())*
+      | LOOKAHEAD( InlineRefConstraint() ) (InlineRefConstraint())*
+      | {}
+    )
+  | 
+    (
+      LOOKAHEAD( OutOfLineConstraint() ) OutOfLineConstraint()
+    | LOOKAHEAD ( OutOfLineRefConstraint() ) OutOfLineRefConstraint()
+    )
+  | SupplementalLoggingProps()
+}
+
+void Expr() :
+{}
+{
+  (
+    (
+      LOOKAHEAD( SimpleExpression() ) SimpleExpression()
+      | LOOKAHEAD ( ObjectAccessExpression() ) ObjectAccessExpression()
+      | LOOKAHEAD ( TypeConstructorExpression() ) TypeConstructorExpression()
+      | LOOKAHEAD ( "(" Expr() ")" )  "(" Expr() ")"
+      | LOOKAHEAD ( ( "+" | "-" | "prior" ) Expr() ) ( "+" | "-" | "prior" ) Expr()
+    )
+//    | CompoundExpression()
+    | CaseExpression()
+    | CursorExpression()
+//    | DatetimeExpression()
+//     | FunctionExpression() // currently don't support function expr..
+//    | IntervalExpression()
+//     | ScalarSubqueryExpression() // currently don't support scalar subquery expr..
+    | VariableExpression()
+  )
+  // left recursion
+  // | Expr() ( "*" | "/" | "+" | "-" | "||" ) Expr()
+  // resolving left recursion
+  (
+    LOOKAHEAD(2)
+    (
+      ( "*" | "/" | "+" | "-" | "||" ) Expr()
+    |
+       "at"
+      (
+        "local"
+        | "time" "zone"
+        (
+          LOOKAHEAD (2)
+              "'" [ "+" | "-" ] "hh" ":" "mm" "'"
+          | "dbtimezone"
+          | "sessiontimezone"
+          | LOOKAHEAD (2) "'" TimeZoneName() "'"
+          | Expr()
+        )
+      )
+    |
+      (
+        "day" "to" "second"
+        | "year" "to" "month"
+      )
+    )
+  )*
+}
+
+void SimpleExpression() :
+{}
+{
+  (
+     // cannot distinguish identifiers
+/*
+    [
+      (
+        QueryName()
+      | [ Schema() ] ( Table() | View() | MaterializedView() )
+      ) "."
+    ]
+*/
+    (
+      LOOKAHEAD(2) Name() "."
+    | LOOKAHEAD(3) Name() Name() "."
+    | {}
+    )
+    (
+      LOOKAHEAD ( Sequence() "." ( "currval" | "nextval" ) )
+        Sequence() "." ( "currval" | "nextval" )
+    | ( Column() | "rowid" )
+    | "rownum"
+    | Text()
+    | Number()
+    | "null"
+    )
+  )
+}
+
+/*
+void CompoundExpression() :
+{}
+{
+  "(" Expr() ")"
+  | ( "+" | "-" | "prior" ) Expr()
+  // HERE left recursion
+  | Expr() ( "*" | "/" | "+" | "-" | "||" ) Expr()
+}
+*/
+
+void CaseExpression() :
+{}
+{
+  "case"
+  ( SimpleCaseExpression() | SearchedCaseExpression() )
+  [ ElseClause() ]
+  "end"
+}
+
+void SimpleCaseExpression() :
+{}
+{
+  Expr()
+  (
+    "when"
+    ComparisonExpr()
+    "then"
+    ReturnExpr()
+  )+
+}
+
+void ComparisonExpr() :
+{}
+{
+    Expr() // XXX : is this right?
+}
+
+void ReturnExpr() :
+{}
+{
+    Expr() // XXX : is this right?
+}
+
+void ElseExpr() :
+{}
+{
+    Expr() // XXX : is this right?
+}
+
+/*
+void DatetimeValueExpr() :
+{}
+{
+    Expr() // XXX : is this right?
+}
+*/
+
+/*
+void IntervalValueExpr() :
+{}
+{
+    Expr() // XXX : is this right?
+}
+*/
+
+void ColumnExpression() :
+{}
+{
+    Expr() // XXX : is this right?
+}
+
+void SearchedCaseExpression() :
+{}
+{
+  (
+    "when"
+    Condition()
+    "then"
+    ReturnExpr()
+  )+
+}
+
+void Condition() :
+{}
+{
+  (
+    LOOKAHEAD ( ComparisonCondition() ) ComparisonCondition()
+//       | LogicalCondition()
+    | LOOKAHEAD ( MembershipCondition() ) MembershipCondition()
+    | LOOKAHEAD ( RangeCondition() ) RangeCondition()
+    | LOOKAHEAD ( NullCondition() ) NullCondition()
+    | EqualsPath()
+    | ExistsCondition()
+    | LikeCondition()
+    | LOOKAHEAD ( UnderPath() ) UnderPath()
+//   | CompoundCondition() // compound condition translated to below lines
+    | LOOKAHEAD (3) "(" Condition() ")" 
+    | IsOfTypeCondition()
+    | "not" Condition()
+  )
+  // resolve left recursion
+  //  | Condition() ( "and" | "or" ) Condition()
+  ( LOOKAHEAD(2) ( "and" | "or" ) Condition() )*
+}
+
+void ComparisonCondition() :
+{}
+{
+  LOOKAHEAD ( SimpleComparisonCondition() ) SimpleComparisonCondition()
+  | GroupComparisonCondition()
+}
+
+void SimpleComparisonCondition() :
+{}
+{
+  LOOKAHEAD ( Expr() ( "=" | "!=" | "^=" | "<>" | ">" | "<" | ">=" |
+              "<=" ) Expr() )
+    Expr() ( "=" | "!=" | "^=" | "<>" | ">" | "<" | ">=" | "<=" ) Expr()
+  | "(" Expr() ( "," Expr() )* ")" ( "=" | "!=" | "^=" | "<>" ) "(" Subquery() ")"
+}
+
+void GroupComparisonCondition() :
+{}
+{
+  LOOKAHEAD (
+     Expr() ( "=" | "!=" | "^=" | "<>" | ">" | "<" | ">=" | "<=" )
+       ( "any" | "some" | "all" ) "(" ( ExpressionList() | Subquery()
+       ) ")"
+    )
+    Expr() ( "=" | "!=" | "^=" | "<>" | ">" | "<" | ">=" | "<=" )
+      ( "any" | "some" | "all" ) "(" ( ExpressionList() | Subquery()
+      ) ")"
+  | "(" Expr() ( "," Expr() )* ")" ( "=" | "!=" | "^=" | "<>" )
+    ( "any" | "some" | "all" ) "(" ( ExpressionList() ( "'" ExpressionList() ) | Subquery() ) ")"
+}
+
+void ExpressionList() :
+{}
+{
+  LOOKAHEAD ( Expr() ( "," Expr() )* )
+    Expr() ( "," Expr() )*
+  | "(" Expr() ( "," Expr() )* ")"
+}
+
+void MembershipCondition() :
+{}
+{
+  LOOKAHEAD (
+    Expr() [ "not" ] "in" "(" ( ExpressionList() | Subquery() ) ")"
+  )
+  Expr() [ "not" ] "in" "(" ( ExpressionList() | Subquery() ) ")"
+  | "(" Expr() ( "," Expr() )* ")" [ "not" ] "in" "(" ( ExpressionList() ( "'" ExpressionList() ) | Subquery() ) ")"
+}
+
+void RangeCondition() :
+{}
+{
+  Expr() [ "not" ] "between" Expr() "and" Expr()
+}
+
+void NullCondition() :
+{}
+{
+    Expr() "is" [ "not" ] "null" 
+}
+
+void EqualsPath() :
+{}
+{
+    "equals_path" "(" Column() "," PathString() [ "," CorrelationInteger() ] ")"
+}
+
+void ExistsCondition() :
+{}
+{
+    "exists" "(" Subquery() ")"
+}
+
+void LikeCondition() :
+{}
+{
+    Char() [ "not" ] ( "like" | "likec" | "like2" | "like4" ) Char() [ "escape" Char() ]
+}
+
+void IsOfTypeCondition() :
+{}
+{
+    Expr() "is" [ "not" ] "of" [ "type" ] "("
+    [ [ "only" ] [ Schema() "." ] Type() ( "," [ "only" ] [ Schema() "." ] Type() )* ]
+    ")"
+}
+
+void UnderPath() :
+{}
+{
+    "under_path" "(" Column() [ "," Levels() ] "," PathString()
+	[ "," CorrelationInteger() ] ")"
+}
+
+/*
+void CompoundCondition() :
+{}
+{
+  "(" Condition() ")"
+  | "not" Condition()
+  // left recursion
+  | Condition() ( "and" | "or" ) Condition()
+}
+*/
+
+void ElseClause() :
+{}
+{
+  "else" ElseExpr()
+}
+
+void CursorExpression() :
+{}
+{
+  "cursor" "(" Subquery() ")"
+}
+
+/*
+void DatetimeExpression() :
+{}
+{
+  // HERE left recursion
+  DatetimeValueExpr() "at"
+  (
+    "local"
+    | "time" "zone"
+      (
+        "'" [ "+" | "-" ] "hh" ":" "mm" "'"
+        | "dbtimezone"
+        | "sessiontimezone"
+        | "'" TimeZoneName() "'"
+        | Expr()
+      )
+  )
+}
+*/
+
+// void FunctionExpression() :
+// {}
+// {
+//     // how to check the validity?
+// }
+
+/*
+void IntervalExpression() : 
+{}
+{
+  IntervalValueExpr()
+  (
+    "day" "to" "second"
+    | "year" "to" "month"
+  )
+}
+*/
+
+void ObjectAccessExpression() :
+{}
+{
+  (
+    LOOKAHEAD (
+      TableAlias() "." Column() "."
+    )
+    TableAlias() "." Column() "."
+    | LOOKAHEAD (
+      ObjectTableAlias() "."
+    )
+    ObjectTableAlias() "."
+    | "(" Expr() ")" "."
+  )
+  (
+    LOOKAHEAD (
+      Attribute() ( "." Attribute() )*
+        [ "." Method() "(" [ Argument() ("," Argument())* ] ")" ]
+    )
+    Attribute() ( "." Attribute() )*
+      [ "." Method() "(" [ Argument() ("," Argument())* ] ")" ]
+    | Method() "(" [ Argument() ("," Argument())* ] ")"
+  )
+}
+
+void TypeConstructorExpression() :
+{}
+{
+  [ "new" ] [ Schema() "." ] TypeName() "(" [ Expr() ( "," Expr() )* ] ")"
+}
+
+void VariableExpression() :
+{}
+{
+  ":" HostVariable() [ [ "indicator" ] ":" IndicatorVariable() ]
+}
+
+void InlineConstraint() :
+{}
+{
+    [ "constraint" ConstraintName() ]
+    (
+      [ "not" ] "null"
+    | "unique"
+    | "primary" "key"
+    | ReferencesClause()
+    | "check" "(" Condition() ")"
+    )
+    ( LOOKAHEAD( ConstraintState() ) ConstraintState() | {} )
+}
+
+void OutOfLineConstraint() :
+{}
+{
+    [ "constraint" ConstraintName() ]
+    ( "unique" "(" Column() ( "," Column() )* ")"
+      | "primary" "key" "(" Column() ( "," Column() )* ")"
+      | "foreign" "key" "(" Column() ( "," Column() )* ")" ReferencesClause()
+      | "check" "(" Condition() ")"
+    )
+    ( LOOKAHEAD( ConstraintState() ) ConstraintState() | {} )
+}
+
+void InlineRefConstraint() :
+{}
+{
+  (
+     "scope" "is" [ Schema() "." ] ScopeTable()
+    | "with" "rowid"
+    | [ "constraint" ConstraintName()] ReferencesClause()
+      ( LOOKAHEAD( ConstraintState() ) ConstraintState() | {} )
+  )
+}
+
+void OutOfLineRefConstraint() :
+{}
+{
+  (
+     "scope" "for" "(" ( /* RefCol() | RefAttr() */ Name() ) ")" "is" [ Schema() "." ] ScopeTable()
+    | "ref" "(" ( /* RefCol() | RefAttr() */ Name() ) ")" "with" "rowid"
+    | [ "constraint" ConstraintName() ] "foreign" "key"
+      "(" ( /* RefCol() | RefAttr() */ Name() ) ")" 
+      ReferencesClause()
+      ( LOOKAHEAD( ConstraintState() ) ConstraintState() | {} )
+   )
+}
+
+void ReferencesClause() :
+{}
+{
+    "references" [ Schema() "." ] Object()
+	[ "(" Column() ")" ] [ "on" "delete" ( "cascade" | "set" "null" ) ]
+}
+
+void ConstraintState() :
+{}
+{
+  (
+    (
+      LOOKAHEAD(2)
+      ["not"] "deferrable"
+      | "initially" ( "immediate" | "deferred" )
+      | ( "enable" | "disable" )
+      | ( "validate" | "novalidate" )
+      | ( "rely" | "norely" )
+      | UsingIndexClause()
+      | ExceptionsClause()
+    )
+  )+
+}
+
+void UsingIndexClause() :
+{}
+{
+    "using" "index"
+    (
+      [ Schema() "." ] Index()
+      | CreateIndexStatement()
+      | (
+	  "pctfree" Integer()
+          | "initrans" Integer()
+	  | "maxtrans" Integer()
+	  | "tablespace" Tablespace()
+	  | StorageClause()
+	  | "nosort"
+	  | LoggingClause()
+	  | ( "local" | GlobalPartitionedIndex() )
+        )*
+    )
+}
+
+void CreateIndexStatement() :
+{}
+{
+    "create" [ "unique" | "bitmap" ] 
+    "index" [ Schema() "." ]
+    Index() "on"
+    (
+      ClusterIndexClause()
+      | LOOKAHEAD ( TableIndexClause() ) TableIndexClause()
+      | BitmapJoinIndexClause()
+    )
+}
+
+void ClusterIndexClause() :
+{}
+{
+  "cluster" [ Schema() "." ]
+  Cluster() [ IndexAttributes() ]
+}
+
+void TableIndexClause() :
+{}
+{
+  [ Schema() "." ]
+  Table() [ TAlias() ]
+  "("
+  IndexExpr() [ "asc" | "desc" ]
+  ( "," IndexExpr() [ "asc" | "desc" ] )*
+  ")"
+  (
+    LOOKAHEAD ( TableIndexClauseOptionalPart() )
+      (TableIndexClauseOptionalPart())*
+    | LOOKAHEAD ( DomainIndexClause() )
+      DomainIndexClause()
+    | {}
+  )
+}
+
+/* just a part of table index clause */
+void TableIndexClauseOptionalPart() :
+{}
+{
+  GlobalPartitionedIndex()
+  | LocalPartitionedIndex()
+  | IndexAttributes()
+}
+
+void BitmapJoinIndexClause() :
+{}
+{
+  [ Schema() "." ]
+  Table() "("
+  [
+    (
+      [ Schema() "." ] Table() "."
+      // cannot tell talias from table
+      // | TAlias() "."
+    )
+  ]
+  Column()
+  [ "asc" | "desc" ]
+  (
+    ","
+    [
+      (
+        [ Schema() "." ] Table() "."
+        // cannot tell talias from table
+        // | TAlias() "."
+      )
+    ]
+    Column()
+    [ "asc" | "desc" ]
+  )*
+  ")"
+  "from"
+  [ Schema() "." ]
+  Table()
+  [ TAlias() ]
+  (
+    ","
+    [ Schema() "." ]
+    Table()
+    [ TAlias() ]
+  )*
+  "where" Condition() [ LocalPartitionedIndex() ] [ IndexAttributes() ]
+}
+
+/*
+ * NOTE : this is marked as an optional part!!!
+ * So referencing productions should make this as an optional!
+ * current production set has no problem
+ */
+void IndexAttributes() :
+{}
+{
+  PhysicalAttributesClause()
+  | LoggingClause()
+  | "online"
+  | "compute" "statistics"
+  | "tablespace" ( Tablespace() | "default" )
+  | KeyCompression()
+  | "nosort"
+  | "reverse"
+  | ParallelClause()
+}
+
+void IndexExpr() :
+{}
+{
+  (
+    Column()
+    | ColumnExpression()
+  )
+}
+
+void GlobalPartitionedIndex() :
+{}
+{
+    "global" "partition" "by" "range" "(" ColumnList() ")"
+	"(" IndexPartitioningClause() ")"
+}
+
+void LocalPartitionedIndex() :
+{}
+{
+  "local"
+  [
+    OnRangePartitionedTable()
+//    | OnListPartitionedTable() // the grammar looks same with on_range_partitioned_table
+    | LOOKAHEAD ( OnHashPartitionedTable() ) OnHashPartitionedTable()
+    | OnCompPartitionedTable()
+  ]
+}
+
+void OnRangePartitionedTable() :
+{}
+{
+  "("
+  "partition"
+  [ Partition()
+   (
+     LOOKAHEAD (SegmentAttributesClause())
+       ( SegmentAttributesClause() )*
+     | {}
+   )
+  ]
+  ( "," [ Partition()
+          (
+            LOOKAHEAD (SegmentAttributesClause())
+              ( SegmentAttributesClause() )*
+            | {}
+          )
+        ] )*
+  ")"
+}
+
+/*
+void OnListPartitionedTable() :
+{}
+{
+
+}
+*/
+
+void OnHashPartitionedTable() :
+{}
+{
+  (
+    "store" "in" "(" Tablespace() ( "," Tablespace() )* ")"
+    | "(" "partition" [ Partition() [ "tablespace" Tablespace() ]]
+      ( "," "partition" [ Partition() [ "tablespace" Tablespace() ]])*
+      ")"
+  )
+}
+
+void OnCompPartitionedTable() :
+{}
+{
+  [ "store" "in" "(" Tablespace() ( "," Tablespace() )* ")" ]
+  "(" "partition" [ Partition()
+     (
+       LOOKAHEAD (SegmentAttributesClause())
+         ( SegmentAttributesClause() )*
+       | {}
+     )
+  [ IndexSubpartitionClause() ]]
+  ( "," "partition" [ Partition()
+     (
+       LOOKAHEAD (SegmentAttributesClause())
+         ( SegmentAttributesClause() )*
+       | {}
+     )
+    [ IndexSubpartitionClause() ]] )*
+  ")"
+}
+
+void DomainIndexClause() :
+{}
+{
+  "indextype" "is" Indextype() [ ParallelClause() ]
+  [ "parameters" "(" "'" ODCIParameters() "'" ")" ]
+}
+
+void IndexSubpartitionClause() :
+{}
+{
+  (
+    "store" "in" "(" Tablespace() ( "," Tablespace() )* ")"
+    | "(" "subpartition" [ Subpartition() [ "tablespace" Tablespace() ]]
+      ( "," "subpartition" [ Subpartition() [ "tablespace" Tablespace() ]])*
+      ")"
+  )
+}
+
+void ColumnList() :
+{}
+{
+  Column() ( "," Column() )*
+}
+
+void IndexPartitioningClause() :
+{}
+{
+    "partition" Partition() "values" "less" "than" "(" Value() ( "," Value() )* ")"
+	[ SegmentAttributesClause() ]
+}
+
+void SegmentAttributesClause() :
+{}
+{
+  (
+    PhysicalAttributesClause()
+    | LoggingClause()
+    | "tablespace" Tablespace()
+  )+
+}
+
+/*
+ * NOTE!!! this clause is marked as optional in sql reference.
+ * So, referencing production should take this optional!!!
+ * current production set has no problem
+ */
+void PhysicalAttributesClause() :
+{}
+{
+  "pctfree" Integer()
+  | "pctused" Integer()
+  | "initrans" Integer()
+  | "maxtrans" Integer()
+  | StorageClause()
+}
+
+void LoggingClause() :
+{}
+{
+  "logging"
+  | "nologging"
+}
+
+void StorageClause() :
+{}
+{
+  "storage" "("
+  (
+    "initial" Integer() [ "k" | "m" ]
+    | "next" Integer() [ "k" | "m" ]
+    | "minextents" Integer()
+    | "maxextents"
+      (
+        LOOKAHEAD (Integer())
+         Integer()
+        | "unlimited"
+        | {}
+      )
+    | "pctincrease" Integer()
+    | "freelists" Integer()
+    | "freelist" "groups" Integer()
+    | "optimal"
+      (
+        LOOKAHEAD (Integer())
+          Integer() [ "k" | "m" ]
+        | "null"
+        | {}
+      )
+    | "buffer_pool" ( "keep" | "recycle" | "default" )
+  )*
+  ")"
+}
+
+void ExceptionsClause() :
+{}
+{
+  "exceptions" "into" [ Schema() "." ] Table()
+}
+
+void PhysicalProperties() :
+{}
+{
+  (
+    SegmentAttributesClause() [ DataSegmentCompression() ]
+    | "organization"
+      (
+        "heap"
+        (
+          LOOKAHEAD (SegmentAttributesClause())
+          SegmentAttributesClause()
+          | {}
+        )
+        [ DataSegmentCompression() ]
+        | "index" 
+          (
+            LOOKAHEAD (SegmentAttributesClause())
+            SegmentAttributesClause()
+            | {}
+          )
+          IndexOrgTableClause() 
+        | "external"  ExternalTableClause()
+      )
+    | "cluster" Cluster() "(" Column() ( "," Column() )* ")"
+  )
+}
+
+void TableProperties() :
+{}
+{
+  (
+    LOOKAHEAD (ColumnProperties())
+    ( ColumnProperties() )
+    | {}
+  )
+  [ TablePartitioningClauses() ]
+  [ RowMovementClause() ]
+  [ "cache" | "nocache" ]
+  [ "norowdependencies" | "rowdependencies" ]
+  [ "monitoring" | "nomonitoring" ]
+  [ ParallelClause() ]
+  (
+    LOOKAHEAD (EnableDisableClause())
+    ( EnableDisableClause() )*
+    | {}
+  )
+  [ "as" Subquery() ]
+}
+
+void ColumnProperties() :
+{}
+{
+  (
+    ObjectTypeColProperties()
+    | NestedTableColProperties()
+    | ( VarrayColProperties() | LOBStorageClause() ) [
+      LOBPartitionStorage() ]
+    | XMLTypeColumnProperties()
+  )*
+}
+
+void ObjectTypeColProperties() :
+{}
+{
+  "column" Column() SubstitutableColumnClause()
+}
+
+void SubstitutableColumnClause() :
+{}
+{
+  (
+    [ "element" ] "is" "of" [ "type" ] "(" "only" Type() ")"
+    | [ "not" ] "substitutable" "at" "all" "levels"
+  )
+}
+
+void NestedTableColProperties() :
+{}
+{
+  "nested" "table" ( NestedItem() | "column_value" )
+  [ SubstitutableColumnClause() ] 
+  "store" "as" StorageTable()
+  [ "(" "(" ObjectProperties() ")"
+    (
+      LOOKAHEAD(PhysicalProperties())
+      PhysicalProperties()
+      | {}
+    )
+    (
+      LOOKAHEAD(ColumnProperties())
+      ColumnProperties()
+      | {}
+    )
+    ")" ]
+  [ "return" "as" ( "locator" | "value" ) ]
+}
+
+void ObjectProperties() :
+{}
+{
+  (
+    ( Column() /* cannot tell attribute from column */ /* | Attribute() */ ) [ "default" Expr() ]
+      (
+        LOOKAHEAD ( ( InlineConstraint() )* | InlineRefConstraint() )
+        ( ( InlineConstraint() )* | InlineRefConstraint() )
+        | {}
+      )
+    |
+      (
+        (
+          LOOKAHEAD( OutOfLineConstraint() ) OutOfLineConstraint()
+        | LOOKAHEAD ( OutOfLineRefConstraint() ) OutOfLineRefConstraint()
+        )
+        | SupplementalLoggingProps()
+      )
+  )
+}
+
+void TablePartitioningClauses() :
+{}
+{
+  (
+    LOOKAHEAD ( RangePartitioning() ) RangePartitioning()
+    | LOOKAHEAD ( HashPartitioning() ) HashPartitioning()
+    | LOOKAHEAD ( ListPartitioning() ) ListPartitioning()
+    | CompositePartitioning()
+  )
+}
+
+void RangePartitioning() :
+{}
+{
+  "partition" "by" "range" "("
+  Column() ( "," Column() )* ")"
+  "(" "partition" [ Partition() ] RangeValuesClause() TablePartitionDescription()
+  ( ","  "partition" [ Partition() ] RangeValuesClause() TablePartitionDescription() )*
+   ")"
+}
+
+void RangeValuesClause() :
+{}
+{
+    "values" "less" "than" "(" ( Value() | "maxvalue" ) ( "," ( Value() | "maxvalue" ) )* ")"
+}
+
+void Value() :
+{}
+{
+  "value" "(" CorrelationVariable() ")"
+}
+
+void HashPartitioning() :
+{}
+{
+  "partition" "by" "hash" "(" Column() ( "," Column() )* ")"
+  (
+    IndividualHashPartitions()
+    | HashPartitionsByQuantity()
+  )
+}
+
+void ListPartitioning() :
+{}
+{
+  "partition" "by" "list" "(" Column() ")" "("
+  "partition" [ Partition() ] ListValuesClause()
+  TablePartitionDescription()
+  (
+    "," 
+    "partition" [ Partition() ] ListValuesClause()
+    TablePartitionDescription()
+  )*
+  ")"
+}
+
+void CompositePartitioning() :
+{}
+{
+  "partition" "by" "range" "(" ColumnList() ")"
+  (
+    LOOKAHEAD ( SubpartitionByList() ) SubpartitionByList()
+    | SubpartitionByHash()
+  )
+  "("
+  "partition" [ Partition() ] RangeValuesClause()
+  TablePartitionDescription()
+  ( "," "partition" [ Partition() ] RangeValuesClause()
+    TablePartitionDescription() )*
+  ")"
+}
+
+void SubpartitionByHash() :
+{}
+{
+  "subpartition" "by" "hash" "(" Column() ( "," Column() )* ")"
+  [
+    (
+      "subpartitions" Quantity()
+      [ "store" "in" "(" Tablespace() ( "," Tablespace() )* ")" ]
+      | SubpartitionTemplate() 
+    )
+  ]
+}
+
+void IndividualHashPartitions() :
+{}
+{
+  "(" "partition" [ Partition() PartitioningStorageClause() ]
+  ( "," "partition" [ Partition() PartitioningStorageClause() ] ) *
+  ")"
+}
+
+void HashPartitionsByQuantity() :
+{}
+{
+  "partitions" HashPartitionQuantity()
+  [ "store" "in" "(" Tablespace() ( "," Tablespace() )* ")" ]
+  [ "overflow" "store" "in" "(" Tablespace() ( "," Tablespace() )* ")" ]
+}
+
+void SubpartitionByList() :
+{}
+{
+  "subpartition" "by" "list" "(" Column() ")" [ SubpartitionTemplate() ]
+}
+
+void SubpartitionTemplate() :
+{}
+{
+  "subpartition" "template"
+  (
+    "("
+    "subpartition" Subpartition()
+    [ ListValuesClause() ]
+    (
+      LOOKAHEAD (PartitioningStorageClause())
+      PartitioningStorageClause()
+      | {}
+    )
+    (
+      ","  "subpartition" Subpartition()
+      [ ListValuesClause() ]
+      (
+        LOOKAHEAD (PartitioningStorageClause())
+        PartitioningStorageClause()
+        | {}
+      )
+    )*
+    ")"
+   | HashSubpartitionQuantity()
+  )
+}
+
+void ListValuesClause() :
+{}
+{
+  "values" "("
+  (
+    ( Value() | "null" )
+    ( "," ( Value() | "null" ))*
+    | "default"
+  )
+  ")"
+}
+
+void PartitioningStorageClause() :
+{}
+{
+  (
+    "tablespace" Tablespace()
+    | "overflow" [ "tablespace" Tablespace() ]
+    | "lob" "(" LOBItem() ")" "store" "as"
+      ( LOBSegname() [ "(" "tablespace" Tablespace() ")" ]
+        | "(" "tablespace" Tablespace() ")" )
+    | "varray" VarrayItem() "store" "as" "lob" LOBSegname()
+  )*
+}
+
+void TablePartitionDescription() :
+{}
+{
+  (
+    LOOKAHEAD ( SegmentAttributesClause() )
+    SegmentAttributesClause()
+    | {}
+  )
+  [ DataSegmentCompression() ]
+  [ KeyCompression() ]
+  [ "overflow"
+    (
+      LOOKAHEAD ( SegmentAttributesClause() )
+      SegmentAttributesClause()
+      | {}
+    )
+  ]
+  (
+    LOOKAHEAD ( LOBStorageClause() | VarrayColProperties() )
+    ( LOBStorageClause() | VarrayColProperties() )*
+    | {}
+  )
+  [ PartitionLevelSubpartition() ]
+}
+
+void DataSegmentCompression() :
+{}
+{
+  (
+    "compress"
+    | "nocompress"
+  )
+}
+
+void KeyCompression() :
+{}
+{
+  "compress"
+  (
+    LOOKAHEAD( Integer() )
+    Integer()
+    | {}
+  )
+  | "nocompress"
+}
+
+void ParallelClause() :
+{}
+{
+  "noparallel"
+  | "parallel"
+    (
+      LOOKAHEAD( Integer() )
+      Integer()
+      | {}
+    )
+}
+
+void EnableDisableClause() :
+{}
+{
+  ( "enable" | "disable" ) [ ( "validate" | "novalidate" ) ]
+  (
+    "unique" "(" Column() ( "," Column() )* ")"
+    | "primary" "key"
+    | "constraint" Constraints() 
+  )
+  [ UsingIndexClause() ] 
+  [ ExceptionsClause() ]
+  [ "cascade" ]
+  [ ( "keep" | "drop" ) "index" ]
+}
+
+void Constraints() :
+{}
+{
+  (
+    InlineConstraint()
+    | InlineRefConstraint()
+    (
+      LOOKAHEAD( OutOfLineConstraint() ) OutOfLineConstraint()
+    | LOOKAHEAD ( OutOfLineRefConstraint() ) OutOfLineRefConstraint()
+    )
+  )
+}
+
+void RowMovementClause() :
+{}
+{
+  ( "enable" | "disable" ) "row" "movement"
+}
+
+void VarrayColProperties() :
+{}
+{
+  "varray" VarrayItem()
+  (
+    SubstitutableColumnClause()
+    | "store" "as" "lob"
+      (
+        LOOKAHEAD ( LOBSegname() "(" LOBParameters() ")" )
+          LOBSegname() "(" LOBParameters() ")"
+        | LOBSegname()
+        | "(" LOBParameters() ")"
+      )
+   )
+}
+
+void PartitionLevelSubpartition() :
+{}
+{
+  (
+    "subpartitions" HashSubpartitionQuantity()
+      [ "store" "in" "(" Tablespace() ( "," Tablespace() )* ")" ]
+    | "(" SubpartitionSpec() ( "," SubpartitionSpec() )* ")"
+  )
+}
+
+void SubpartitionSpec() :
+{}
+{
+  "subpartition" [ Subpartition() ] [ ListValuesClause() ]
+  ( 
+    LOOKAHEAD (PartitioningStorageClause())
+    PartitioningStorageClause()
+    | {}
+  )
+}
+
+void LOBStorageClause() :
+{}
+{
+  "lob"
+  (
+    LOOKAHEAD ( 
+      "(" LOBItem() ( "," LOBItem() )* ")" "store" "as" "("
+      LOBParameters() ")"
+    )
+    "(" LOBItem() ( "," LOBItem() )* ")" "store" "as" "("
+    LOBParameters() ")"
+    | "(" LOBItem() ")" "store" "as"
+      (
+        LOOKAHEAD ( LOBSegname() "(" LOBParameters() ")" )
+          LOBSegname() "(" LOBParameters() ")" 
+        | LOBSegname()
+        | "(" LOBParameters() ")"
+      )
+  )
+}
+
+void LOBPartitionStorage() :
+{}
+{
+  "partition" Partition() 
+  (
+    LOBStorageClause()
+    | VarrayColProperties()
+  )*
+  [ "(" "subpartition" Subpartition()
+    (
+      LOBStorageClause()
+      | VarrayColProperties()
+    )*
+    ")"
+  ]
+}
+
+void XMLTypeColumnProperties() :
+{}
+{
+  "xmltype" [ "column" ] Column()
+  [ XMLTypeStorage() ] [ XMLSchemaSpec() ]
+}
+
+void XMLTypeStorage() :
+{}
+{
+  "store" "as"
+  (
+    "object" "relational"
+    | "clob" 
+      (
+        LOOKAHEAD (LOBSegname())
+          LOBSegname() [ "(" LOBParameters() ")" ]
+        | LOOKAHEAD (LOBParameters())
+          LOBParameters()
+        | {}
+      )
+   )
+}
+
+void XMLSchemaSpec() :
+{}
+{
+  [ "xmlschema" XMLSchemaURL() ]
+  "element"
+  (
+    LOOKAHEAD ( XMLSchemaURL() "#" Element() )
+      XMLSchemaURL() "#" Element()
+    | Element()
+  )
+}
+
+void IndexOrgTableClause() :
+{}
+{
+  (
+    LOOKAHEAD
+    (
+      MappingTableClause()
+      | "pcthreshold" Integer()
+      | KeyCompression()
+    )
+    (
+      MappingTableClause()
+      | "pcthreshold" Integer()
+      | KeyCompression()
+    )*
+    | {}
+  )
+  [
+    IndexOrgOverflowClause()
+  ]
+}
+
+void IndexOrgOverflowClause() :
+{}
+{
+  [
+    "including" ColumnName()
+  ]
+  "overflow"
+  (
+    LOOKAHEAD ( SegmentAttributesClause() )
+      SegmentAttributesClause() | {}
+  )
+}
+
+void ExternalTableClause() :
+{}
+{
+  "(" [ "type" AccessDriverType() ]
+  ExternalDataProperties() ")"
+  [
+    "reject" "limit" ( Integer() | "unlimited" )
+  ]
+}
+
+void ExternalDataProperties() :
+{}
+{
+  "default" "directory" Directory()
+  [ "access" "parameters"
+    (
+       "(" OpaqueFormatSpec() ")"
+       | "using" "clob" Subquery()
+     )
+  ]
+  "location" "("
+  [ Directory() ":" ] "'" LocationSpecifier() "'"
+  ( "," [ Directory() ":" ] "'" LocationSpecifier() "'" )*
+  ")"
+}
+
+void MappingTableClause() :
+{}
+{
+  ( "mapping" "table" | "nomapping" )
+}
+
+void LOBParameters() :
+{}
+{
+  (
+    "tablespace" Tablespace()
+    | ( "enable" | "disable" ) "storage" "in" "row"
+    | StorageClause()
+    | "chunk" Integer()
+    | "pctversion" Integer()
+    | "retention"
+    | "freepools" Integer()
+    | (
+        "cache"
+        | ( "nocache" | "cache" "reads" ) [ LoggingClause() ]
+      )
+  )*
+}
+
+void Subquery() :
+{}
+{
+    [ SubqueryFactoringClause() ] "select" /* [ Hint() ] */ [ ( ( "distinct" | "unique" ) | "all" ) ]
+	SelectList() "from" TableReference() ( "," TableReference() )*
+        [ "where" Condition() ] [ HierarchicalQueryClause() ] [ GroupByClause() ] 
+        [ "having" Condition() ]
+        [ ( "union" [ "all" ] | "intersect" | "minus" ) "(" Subquery() ")" ]
+        [ OrderByClause() ]
+}
+
+void SubqueryFactoringClause() :
+{}
+{
+    "with" QueryName() "as" "(" Subquery() ")" ( "," QueryName() "as" "(" Subquery() ")" )*
+}
+
+void SelectList() :
+{}
+{
+  (
+    "*"
+    | (
+      ( LOOKAHEAD(3) Name() "." | Name() Name() "." )
+       // cannot tell id's
+/*
+        (
+	  QueryName()
+          | [ Schema() "." ]
+	  ( Table()
+            | View()
+            | MaterializedView()
+	  ) 
+        )
+*/
+        ( LOOKAHEAD(2) Name() | [ Schema() "." ] Name() )
+        ".*"
+        | Expr() [ [ "as" ] CAlias() ]
+      )
+     ( "," (
+             // cannot tell id's
+/*
+             (
+               QueryName()
+               | [ Schema() "." ]
+                 ( Table()
+                 | View()
+                 | MaterializedView()
+                 ) 
+               )
+*/
+             ( LOOKAHEAD(2) Name() | [ Schema() "." ] Name() )
+             ".*"
+             | Expr() [ [ "as" ] CAlias() ]
+            ) )*
+  )
+}
+
+void HierarchicalQueryClause() :
+{}
+{
+  [ "start" "with" Condition() ] "connect" "by" Condition()
+}
+
+void GroupByClause() :
+{}
+{
+  "group" "by"
+  (
+    Expr()
+    | RollupCubeClause()
+    | GroupingSetsClause()
+  )
+  ( ","
+    (
+      Expr()
+      | RollupCubeClause()
+      | GroupingSetsClause()
+    )
+  )*
+  [ "having" Condition() ]
+}
+
+void RollupCubeClause() :
+{}
+{
+  ( "rollup" | "cube" ) "(" GroupingExpressionList() ")"
+}
+
+void GroupingSetsClause() :
+{}
+{
+  "grouping" "sets" "("
+  ( RollupCubeClause() | GroupingExpressionList() )
+  ")"
+}
+
+void GroupingExpressionList() :
+{}
+{
+  ExpressionList() ( "," ExpressionList() )*
+}
+
+void OrderByClause() :
+{}
+{
+  "order" [ "siblings" ] "by"
+  ( Expr() | Position() | CAlias() )
+  [ ( "asc" | "desc" ) ]
+  [ "nulls" ( "first" | "last" ) ]
+  (
+    "," 
+    ( Expr() | Position() | CAlias() )
+    [ ( "asc" | "desc" ) ]
+    [ "nulls" ( "first" | "last" ) ]
+  )*
+}
+
+void Datatypes() :
+{}
+{
+  (
+    OracleBuiltInDatatypes()
+  | ANSISupportedDatatypes()
+  // cannot tell below ids
+  | UserDefinedTypes()
+//  | OracleSuppliedTypes()
+  )
+}
+
+void OracleBuiltInDatatypes() :
+{}
+{
+  (
+    CharacterDatatypes()
+  | NumberDatatypes()
+  | LongAndRawDatatypes()
+  | DatetimeDatatypes()
+  | LargeObjectDatatypes()
+  | RowidDatatypes()
+  )
+}
+
+void CharacterDatatypes() :
+{}
+{
+  (
+    "char" "(" Size() [ "byte" | "char" ] ")"
+  | "varchar2" "(" Size()  [ "byte" | "char" ] ")"
+  | "nchar" "(" Size() ")"
+  | "nvarchar2" "(" Size() ")"
+  )
+}
+
+void NumberDatatypes() :
+{}
+{
+  "number" [ "(" Precision() [ "," Scale() ] ")" ]
+}
+
+void LongAndRawDatatypes() :
+{}
+{
+  (
+    LOOKAHEAD(2)
+    "long"
+  | "long" "raw"
+  | "raw" "(" Size() ")"
+  )
+}
+
+void DatetimeDatatypes() :
+{}
+{
+  (
+    "date"
+  | "timestamp"
+    [ "(" FractionalSecondsPrecision() ")" ]
+    [ "with" [ "local" ] "time" "zone" ]
+  | LOOKAHEAD(2) "interval" "year" [ "(" YearPrecision() ")" ] "to" "month"
+  | "interval" "day" [ "(" DayPrecision() ")" ] "to" "second" 
+    [ "(" FractionalSecondsPrecision() ")" ]
+  )
+}
+
+void LargeObjectDatatypes() :
+{}
+{
+  (
+    "blob"
+  | "clob"
+  | "nclob"
+  | "bfile"
+  )
+}
+
+void RowidDatatypes() :
+{}
+{
+  (
+    "rowid"
+  | "urowid" [ "(" Size() ")" ]
+  )
+}
+
+void ANSISupportedDatatypes() :
+{}
+{
+  (
+    "character" [ "varying" ] "(" Size() ")"
+  | ( "char" | "nchar" ) "varying" "(" Size() ")"
+  | "varchar" "(" Size() ")"
+  | "national" ( "character" | "char" ) [ "varying" ] "(" Size() ")"
+  | ( "numeric" | "decimal" | "dec" )
+      [ "(" Precision() [ "," Scale() ] ")" ]
+  | ( "integer" | "int" | "smallint" )
+  | "float" [ "(" Size() ")" ]
+  | "double" "precision"
+  | "real"
+  )
+}
+
+void OracleSuppliedTypes() :
+{}
+{
+  // cannot tell from each other, so...
+  Type()
+/*
+  (
+    AnyTypes()
+  | XMLTypes()
+  | SpatialType()
+  | MediaTypes()
+  )
+*/
+}
+
+void AnyTypes() :
+{}
+{
+  // cannot tell from each other, so...
+  Type()
+/*
+  (
+    SYS_AnyData()
+  | SYS_AnyType()
+  | SYS_AnyDataSet()
+  )
+*/
+}
+
+void XMLTypes() :
+{}
+{
+  // cannot tell from each other, so...
+  Type()
+/*
+  (
+    XMLType()
+  | URIType()
+  )
+*/
+}
+
+void SpatialType() :
+{}
+{
+  MDSYS_SDO_Geometry()
+}
+
+void MediaTypes() :
+{}
+{
+  // cannot tell from each other, so...
+  Type()
+/*
+  (
+    ORDSYS_ORDAudio()
+  | ORDSYS_ORDImage()
+  | ORDSYS_ORDVideo()
+  | ORDSYS_ORDDoc()
+  )
+*/
+}
+
+void UserDefinedTypes() :
+{}
+{
+  Type()
+}
+
+void Size() :
+{}
+{
+  /* up to 4000 */
+  Digits()
+}
+
+void Precision() :
+{}
+{
+  /* 1 ~ 38 */
+  Digits()
+}
+
+void Scale() :
+{}
+{
+  /* -84 ~ 127 */
+  Integer()
+}
+
+void FractionalSecondsPrecision() :
+{}
+{
+  /* 0 ~ 9 */
+  Digit()
+}
+
+void YearPrecision() :
+{}
+{
+  /* 0 ~ 9 */
+  Digit()
+}
+
+void DayPrecision() :
+{}
+{
+  /* 0 ~ 9 */
+  Digit()
+}
+
+void SYS_AnyData() :
+{
+  String s;
+}
+{
+  // XXX : is this right?
+  s = Name()
+}
+
+void SYS_AnyType() :
+{
+  String s;
+}
+{
+  // XXX : is this right?
+  s = Name()
+}
+
+void SYS_AnyDataSet() :
+{
+  String s;
+}
+{
+  // XXX : is this right?
+  s = Name()
+}
+
+void XMLType() :
+{
+  String s;
+}
+{
+  // XXX : is this right?
+  s = Name()
+}
+
+void URIType() :
+{
+  String s;
+}
+{
+  // XXX : is this right?
+  s = Name()
+}
+
+void MDSYS_SDO_Geometry() :
+{
+  String s;
+}
+{
+  // XXX : is this right?
+  s = Name()
+}
+
+void ORDSYS_ORDAudio() :
+{
+  String s;
+}
+{
+  // XXX : is this right?
+  s = Name()
+}
+
+void ORDSYS_ORDImage() :
+{
+  String s;
+}
+{
+  // XXX : is this right?
+  s = Name()
+}
+
+void ORDSYS_ORDVideo() :
+{
+  String s;
+}
+{
+  // XXX : is this right?
+  s = Name()
+}
+
+void ORDSYS_ORDDoc() :
+{
+  String s;
+}
+{
+  // XXX : is this right?
+  s = Name()
+}
+
+void LOBSegname() :
+{
+    String s;
+}
+{
+    s = Name()
+}
+
+void LOBItem() :
+{
+    String s;
+}
+{
+    s = Name()
+}
+
+void Schema() :
+{
+    String s;
+}
+{
+    s = Name()
+}
+
+void Table() :
+{
+    String s;
+}
+{
+    s = Name()
+    {
+      System.out.println("table name : " + s);
+    }
+}
+
+void View() :
+{
+    String s;
+}
+{
+    s = Name()
+}
+
+void MaterializedView() :
+{
+    String s;
+}
+{
+    s = Name()
+}
+
+void Sequence() :
+{
+    String s;
+}
+{
+    s = Name()
+}
+
+void Text() :
+{}
+{
+    [ "n" ] "'" ( C() )* "'"
+}
+
+void Quantity() :
+{}
+{
+  Number()
+}
+
+void HashPartitionQuantity() :
+{}
+{
+  Number()
+}
+
+void HashSubpartitionQuantity() :
+{}
+{
+  Number()
+}
+
+void Number() :
+{}
+{
+  [ "+" | "-" ]
+  (
+    Digit() ( Digit() )* [ "." ( LOOKAHEAD ( Digit() ) ( Digit() )* | {} ) ]
+    | "." Digit() ( Digit() )*
+  )
+  [ "e" [ ( "+" | "-" ) ] Digit() ( Digit() )* ]
+}
+
+void Digits() :
+{}
+{
+  Digit() ( Digit() )*
+}
+
+void Column() :
+{
+    String s;
+}
+{
+    s = Name()
+    {
+      System.out.println("column name - " + s);
+    }
+}
+
+void Type() :
+{
+    String s;
+}
+{
+    s = Name()
+}
+
+void QueryName() :
+{
+    String s;
+}
+{
+    s = Name()
+}
+
+void Directory() :
+{
+    String s;
+}
+{
+    // FIXME : is this right? mmm it should denote some path
+    s = Name()
+}
+
+void LocationSpecifier() :
+{
+    String s;
+}
+{
+    // FIXME : is this right? mmm it should denote some path
+    s = Name()
+}
+
+void XMLSchemaURL() :
+{
+    String s;
+}
+{
+    // FIXME : is this right? mmm it should denote some url
+    s = Name()
+}
+
+void OpaqueFormatSpec() :
+{
+    String s;
+}
+{
+    // XXX : is this right? mmm
+    s = Name()
+}
+
+void TimeZoneName() :
+{
+    String s;
+}
+{
+    s = Name()
+}
+
+void TableAlias() :
+{
+    String s;
+}
+{
+    s = Name()
+}
+
+void ObjectTableAlias() :
+{
+    String s;
+}
+{
+    s = Name()
+}
+
+void Attribute() :
+{
+    String s;
+}
+{
+    s = Name()
+}
+
+void Method() :
+{
+    String s;
+}
+{
+    s = Name()
+}
+
+void Argument() :
+{
+    String s;
+}
+{
+    s = Name()
+}
+
+void TypeName() :
+{
+    String s;
+}
+{
+    s = Name()
+}
+
+void HostVariable() :
+{
+    String s;
+}
+{
+    s = Name()
+}
+
+void IndicatorVariable() :
+{
+    String s;
+}
+{
+    s = Name()
+}
+
+void ConstraintName() :
+{
+    String s;
+}
+{
+    s = Name()
+}
+
+void ScopeTable() :
+{
+    String s;
+}
+{
+    s = Name()
+}
+
+void RefCol() :
+{
+    String s;
+}
+{
+    s = Name()
+}
+
+void RefAttr() :
+{
+    String s;
+}
+{
+    s = Name()
+}
+
+void Object() :
+{
+    String s;
+}
+{
+    s = Name()
+}
+
+void Index() :
+{
+    String s;
+}
+{
+    s = Name()
+}
+
+void Tablespace() :
+{
+    String s;
+}
+{
+    s = Name()
+}
+
+void Partition() :
+{
+    String s;
+}
+{
+    s = Name()
+}
+
+void Subpartition() :
+{
+    String s;
+}
+{
+    s = Name()
+}
+
+void Cluster() :
+{
+    String s;
+}
+{
+    s = Name()
+}
+
+void StorageTable() :
+{
+    String s;
+}
+{
+    s = Name()
+}
+
+void LogGroup() :
+{
+    String s;
+}
+{
+    s = Name()
+}
+
+void CorrelationVariable() :
+{
+    String s;
+}
+{
+    s = Name()
+}
+
+void TableReference() :
+{
+    String s;
+}
+{
+    s = Name()
+}
+
+void ColumnName() :
+{
+    String s;
+}
+{
+    s = Name()
+}
+
+void NestedItem() :
+{
+    String s;
+}
+{
+    s = Name()
+}
+
+void TAlias() :
+{
+    String s;
+}
+{
+    s = Name()
+}
+
+void Indextype() :
+{
+    String s;
+}
+{
+    s = Name()
+}
+
+void AccessDriverType() :
+{
+    String s;
+}
+{
+    s = Name()
+}
+
+void VarrayItem() :
+{
+    String s;
+}
+{
+   // XXX : is this right?
+    s = Name()
+}
+
+void Element() :
+{
+    String s;
+}
+{
+   // XXX : is this right? this should denote an XML element
+    s = Name()
+}
+
+void ODCIParameters() :
+{}
+{
+  // FIXME : does not support now
+  <IDENTIFIER>
+}
+
+void CAlias() :
+{}
+{
+    < LETTER >
+}
+
+void C() :
+{}
+{
+    < LETTER >
+}
+
+void PathString() :
+{}
+{
+    <CHAR_LITERAL>
+}
+
+void Position() :
+{}
+{
+  Integer()
+}
+
+/*
+ * generic id
+ */
+String Name() :
+{
+  Token t;
+}
+{
+  ( <IDENTIFIER> /* | UnreservedKeyword() */ | <TYPE> )
+  {
+    t = getToken(0);
+    // System.out.println("name - " + t.image);
+    return t.image;
+  }
+}
+
+void SupplementalLoggingProps() :
+{}
+{
+  "supplemental" "log" "group" LogGroup() "(" Column() ( "," Column() )* ")" [ "always" ]
+}
+
+// void ScalarSubqueryExpression() :
+// {}
+// {
+//   <IDENTIFIER>
+// }
+
+void Char() :
+{}
+{
+  <CHAR_LITERAL>
+}
+
+void Levels() :
+{}
+{
+    Integer()
+}
+
+void CorrelationInteger() :
+{}
+{
+    Integer()
+}
+
+void Integer() :
+{}
+{
+    [ "+" | "-" ] ( <DIGIT> )*
+}
+
+void Digit() :
+{}
+{
+  <DIGIT>
+}
+
+void UnreservedKeyword() :
+{}
+{
+  < ALWAYS >
+| < ANALYZE >
+| < ASSOCIATE >
+| < AT >
+| < BFILE >
+| < BITMAP >
+| < BLOB >
+| < BUFFER_POOL >
+| < BYTE >
+| < CACHE >
+| < CALL >
+| < CASCADE >
+| < CASE >
+| < CHARACTER >
+| < CHUNK >
+| < CLOB >
+| < COLUMN_VALUE >
+| < COMMIT >
+| < COMPUTE >
+| < CONSTRAINT >
+| < CUBE >
+| < CURRVAL >
+| < CURSOR >
+| < DAY >
+| < DBTIMEZONE >
+| < DEC >
+| < DEFERRABLE >
+| < DEFERRED >
+| < DIRECTORY >
+| < DISABLE >
+| < DISASSOCIATE >
+| < DOUBLE >
+| < ELEMENT >
+| < ENABLE >
+| < END >
+| < EQUALS_PATH >
+| < ESCAPE >
+| < EXCEPTIONS >
+| < EXPLAIN >
+| < EXTERNAL >
+| < FIRST >
+| < FOREIGN >
+| < FREELIST >
+| < FREELISTS >
+| < FREEPOOLS >
+| < GLOBAL >
+| < GROUPING >
+| < GROUPS >
+| < HASH >
+| < HEAP >
+| < HH >
+| < INCLUDING >
+| < INDEXTYPE >
+| < INDICATOR >
+| < INITIALLY >
+| < INITRANS >
+| < INT >
+| < INTERVAL >
+| < KEEP >
+| < KEY >
+| < LAST >
+| < LESS_STRING >
+| < LEVELS >
+| < LIKE2 >
+| < LIKE4 >
+| < LIKEC >
+| < LIMIT >
+| < LIST >
+| < LOB >
+| < LOCAL >
+| < LOCATION >
+| < LOCATOR >
+| < LOG >
+| < LOGGING >
+| < MAPPING >
+| < MAXTRANS >
+| < MAXVALUE >
+| < MERGE >
+| < MINEXTENTS >
+| < MM >
+| < MONITORING >
+| < MONTH >
+| < MOVEMENT >
+| < NATIONAL >
+| < NCHAR >
+| < NCLOB >
+| < NESTED >
+| < NEW >
+| < NEXT >
+| < NEXTVAL >
+| < NOCACHE >
+| < NOLOGGING >
+| < NOMAPPING >
+| < NOMONITORING >
+| < NOPARALLEL >
+| < NORELY >
+| < NOROWDEPENDENCIES >
+| < NOSORT >
+| < NOVALIDATE >
+| < NULLS >
+| < NUMERIC >
+| < NVARCHAR2 >
+| < OBJECT >
+| < ONLY >
+| < OPTIMAL >
+| < ORGANIZATION >
+| < OVERFLOW >
+| < PARALLEL >
+| < PARAMETERS >
+| < PARTITION >
+| < PARTITIONS >
+| < PCTHRESHOLD >
+| < PCTINCREASE >
+| < PCTUSED >
+| < PCTVERSION >
+| < PRECISION >
+| < PRESERVE >
+| < PRIMARY >
+| < QUOTE >
+| < RANGE >
+| < READS >
+| < REAL >
+| < RECYCLE >
+| < REF >
+| < REFERENCES >
+| < REJECT >
+| < RELATIONAL >
+| < RELY >
+| < RETENTION >
+| < RETURN >
+| < REVERSE >
+| < ROLLBACK >
+| < ROLLUP >
+| < ROWDEPENDENCIES >
+| < SAVEPOINT >
+| < SCOPE >
+| < SECOND >
+| < SESSIONTIMEZONE >
+| < SETS >
+| < SHARP >
+| < SIBLINGS >
+| < SOME >
+| < SORT >
+| < STATISTICS >
+| < STORAGE >
+| < STORE >
+| < SUBPARTITION >
+| < SUBPARTITIONS >
+| < SUBSTITUTABLE >
+| < SUPPLEMENTAL >
+| < TABLESPACE >
+| < TEMPLATE >
+| < TEMPORARY >
+| < THAN >
+| < TIME >
+| < TIMESTAMP >
+| < TRUNCATE >
+| < TYPE >
+| < UNDER_PATH >
+| < UNLIMITED >
+| < UROWID >
+| < USING >
+| < VALUE >
+| < VARRAY >
+| < VARYING >
+| < WHEN >
+| < XMLSCHEMA >
+| < XMLTYPE >
+| < YEAR >
+| < ZONE >
+}
