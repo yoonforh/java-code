@@ -1,0 +1,42 @@
+<html> <head>
+   <meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <meta name="Author" content="Yoon Kyung Koo">
+   <title>File Upload Test Page</title>
+</head>
+
+<body>
+<h1>HTTP File Upload</h1>
+This is a sample file upload page using HTTP protocol.<br>
+Select the file type before upload.
+<form enctype="multipart/form-data" method="POST" action="/servlet/yoonforh.upload.UploadServlet">
+<table border=1 align=center>
+<tr><td> Additional Information :</td>
+<td>
+  <textarea name="misc" rows=15 cols=55 wrap=virtual tabindex=5></textarea>
+</td></tr>
+<tr><td> File Path :</td>
+<td><input type="text" name="path" value="" size="40" maxlength="200">
+</td></tr>
+<tr><td>
+file 1 to upload</td>
+<td><input type="file" size="20" maxlength="200" name="file1" value="Select File">
+</td></tr>
+<tr><td>
+file 2 to upload</td>
+<td><input type="file" size="20" maxlength="200" name="file2" value="Select File">
+</td></tr>
+<tr><td>
+file 3 to upload</td>
+<td><input type="file" size="20" maxlength="200" name="file3" value="Select File">
+</td></tr>
+<tr><td colspan=2 align=center>
+<input type="submit" name="uploadservlet" value="Upload"> <input type="reset" value="Clear">
+</td></tr>
+</table>
+</form>
+<hr>
+<address></address>
+<!-- hhmts start -->
+Last modified: Sat Feb 23 21:39:06 2002
+<!-- hhmts end -->
+</body> </html>
