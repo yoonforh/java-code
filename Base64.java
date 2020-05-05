@@ -1,7 +1,7 @@
 /*
  * $Id: Base64.java,v 1.1.1.1 2007-04-21 12:32:26 yoonforh Exp $
  *
- * Copyright (c) 2002-2004 by Yoon Kyung Koo (yoonforh@yahoo.com),
+ * Copyright (c) 2002-2004 by Yoon Kyung Koo,
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
