@@ -1,0 +1,1 @@
+java -jar ..\dist\codegen.jar -batch %1 %2 %3 %4 %5

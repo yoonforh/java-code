@@ -1,0 +1,54 @@
+<!--
+ $Id: db_table_info.dtd,v 1.1.1.1 2003/05/26 01:53:54 cvsuser Exp $
+
+ Copyright (c) 2003 by Yoon Kyung Koo.
+ All rights reserved.
+ 
+ This software is the confidential and proprietary information
+ of Yoon Kyung Koo("Confidential Information").  You
+ shall not disclose such Confidential Information and shall use
+ it only in accordance with the terms of the license agreement
+ you entered into with Yoon Kyung Koo.
+
+________________________________________________________________
+
+Template Information defintions for code generator
+This dtd should have following DOCTYPE
+
+  <!DOCTYPE table-info-sheet PUBLIC
+	"-//Yoon Kyung Koo.//DTD Database Table Information 1.0//EN"
+	"http://java.freehosting.co.kr/dtd/db_table_info_1_0.dtd">
+
+-->
+
+<!-- root element -->
+<!ELEMENT table-info-sheet (title, author?, date?, description?, table+)>
+
+<!-- title -->
+<!ELEMENT title (#PCDATA)>
+
+<!-- author -->
+<!ELEMENT author (#PCDATA)>
+
+<!-- creation date -->
+<!ELEMENT date (#PCDATA)>
+
+<!-- brief description -->
+<!ELEMENT description (#PCDATA)>
+
+<!-- table declaration -->
+<!ELEMENT table (field+)>
+
+<!-- table attributes name, public keys, alias -->
+<!ATTLIST table
+	name CDATA #REQUIRED
+	keys CDATA #IMPLIED
+	alias CDATA #IMPLIED>
+
+<!-- db field declaration -->
+<!ELEMENT field EMPTY>
+
+<!ATTLIST field
+	name CDATA #REQUIRED
+	type CDATA #REQUIRED
+	size CDATA #IMPLIED>

@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- 
+ $Id$
+
+ Copyright (c) 2003 by Yoon Kyung Koo.
+ All rights reserved.
+ 
+ This software is the confidential and proprietary information
+ of Yoon Kyung Koo("Confidential Information").  You
+ shall not disclose such Confidential Information and shall use
+ it only in accordance with the terms of the license agreement
+ you entered into with Yoon Kyung Koo.
+
+________________________________________________________________
+
+ Build file for template code generator - for use with Jakarta Ant
+-->
+
+<project name="codegen" default="dist" basedir="."> 
+
+  <!-- Final jar name -->
+  <property name="dist.jar" value="codegen.jar"/>
+
+  <!-- Base directories -->
+  <property name="src.dir" value="src"/>
+  <property name="lib.dir" value="lib"/>
+  <property name="docs.dir" value="docs"/>
+  <property name="target.dir" value="classes"/>
+  <!-- property name="samples.dir" value="samples"/ -->
+  <property name="javacc.lib.dir" value="javacc-3.0"/>
+
+  <!-- Build classpath -->
+  <property name="build.classpath" value="."/>
+
+  <!-- Dist directory -->
+  <property name="dist.dir" value="dist"/>
+    
+  <!-- =================================================================== -->
+  <!-- Prepares the build directories                                      -->
+  <!-- =================================================================== -->
+    
+  <target name="prepare">
+    <mkdir dir="${target.dir}"/>
+    <antcall target="javacc.parser">
+      <param name="jj.file" value="${src.dir}/yoonforh/codegen/parser/oracle-create-table.jj" />
+      <param name="output.path" value="${src.dir}/yoonforh/codegen/parser" />
+    </antcall>
+  </target>
+
+  <target name="prepare.docs" depends="prepare">
+    <mkdir dir="${docs.dir}"/>
+  </target>
+    
+  <target name="prepare.dist">
+    <mkdir dir="${dist.dir}"/>
+  </target>
+
+  <target name="javacc.parser">
+    <java classname="javacc" fork="yes">
+         <arg value="-OUTPUT_DIRECTORY=${output.path}"/> 
+         <arg value="${jj.file}"/> 
+         <classpath>
+           <pathelement location="${javacc.lib.dir}/javacc.jar"/>
+         </classpath>
+    </java>
+  </target>
+    
+  <!-- =================================================================== -->
+  <!-- Compile entire source tree                                          -->
+  <!-- =================================================================== -->
+    
+  <target name="compile" depends="prepare, compile.base"/>
+    
+  <target name="compile.base">
+    <javac srcdir="${src.dir}" 
+      destdir="${target.dir}"
+      includes="**/*.java"
+      deprecation="on"
+      debug="on"
+      optimize="off"
+      source="1.4"
+      classpath="${build.classpath}"/>
+    <copy todir="${target.dir}">
+      <fileset dir="${src.dir}" includes="**/*.dtd,**/*.gif,**/*.jpg"/>
+    </copy>
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Creates the JAR                                                     -->
+  <!-- =================================================================== -->
+
+  <target name="dist" depends="compile,prepare.dist">
+    <jar jarfile="${dist.dir}/${dist.jar}" basedir="${target.dir}"
+      compress="false" >
+      <!-- flatteningly include xerces, xalan parsers -->
+      <zipgroupfileset dir="${lib.dir}" includes="*.jar" />
+      <manifest>
+        <attribute name="Main-Class" value="yoonforh.codegen.CodeGenerator"/>
+      </manifest>
+    </jar>
+    <!-- copy todir="${samples.dir}" file="${dist.dir}/${dist.jar}"/ -->
+  </target>
+ 
+  <!-- =================================================================== -->
+  <!-- Creates the API documentation                                       -->
+  <!-- =================================================================== -->
+
+  <target name="docs" depends="prepare.docs">
+    <javadoc
+      packagenames="yoonforh.codegen.*"
+      classpath="${build.classpath}"
+      destdir="${docs.dir}"
+      sourcepath="${build.src}"
+      protected="true"
+      author="true"
+      version="true"
+      use="true"/>
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Cleans everything:                                                  -->
+  <!-- =================================================================== -->
+  
+  <target name="clean">
+    <delete dir="${target.dir}"/>
+    <delete dir="${dist.dir}"/>
+    <delete>
+      <fileset dir="." includes="*.zip,*.tar,*.tar.gz" />
+    </delete>
+  </target>
+
+</project>

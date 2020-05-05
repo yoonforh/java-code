@@ -1,0 +1,431 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE template-info PUBLIC
+	"-//Yoon Kyung Koo.//DTD Template Information 1.0//EN"
+	"http://java.freehosting.co.kr/dtd/template_info_1_0.dtd">
+
+<!--
+  sample template.xml
+-->
+
+
+<template-info>
+  <name>meta</name>
+  <description>Meta Framework Template</description>
+  <variables>
+    <root-path-var id="ejb-src-root" default="true">EJB Source Root</root-path-var>
+    <global-var id="company">Company Name (e.g, YoonForH Corp.)</global-var>
+    <global-var id="function-id">Function ID (2 letter)</global-var>
+    <global-var id="app-name">Application Name (e.g, mis)</global-var>
+    <global-var id="pool-name">JDBC Pool Name (e.g, misPool)</global-var>
+    <global-var id="sql-sheet" type="file">DDL SQL File Path</global-var>
+  </variables>
+
+  <doc-info>
+    <zip-path>ts/deployment/ejb-jar.xml</zip-path>
+    <description>EJB Jar deployment descriptor</description>
+    <rel-path>%%function-id:lower%%/deployment/ejb-jar.xml</rel-path>
+    <var name="pool-name" />
+    <var name="ejb-local-ref-to-entities-block">
+      <handler type="yoonforh.codegen.handler.DBCodeHandler">
+        <param name="input-type">sql-sheet</param>
+        <param name="code-type">code-block</param>
+        <param name="sql-sheet-path-key">sql-sheet</param>
+        <param name="iteration-type">table</param>
+        <param name="code-block"><![CDATA[
+      <ejb-local-ref>
+        <ejb-ref-name>ejb/${function-id:lower}/${table-name:csu_db}EntityLocal</ejb-ref-name>
+        <ejb-ref-type>Entity</ejb-ref-type>
+	<local-home>com.yoonforh.ejb.mis.${function-id:lower}.${table-name:csu_db}EntityLocalHome</local-home>
+	<local>com.yoonforh.ejb.mis.${function-id:lower}.${table-name:csu_db}EntityLocal</local>
+      </ejb-local-ref>
+]]></param>
+      </handler>
+    </var>
+    <var name="ejb-entities-block">
+      <handler type="yoonforh.codegen.handler.DBCodeHandler">
+        <param name="input-type">sql-sheet</param>
+        <param name="code-type">code-block</param>
+        <param name="iteration-type">table</param>
+        <param name="sql-sheet-path-key">sql-sheet</param>
+        <param name="code-block"><![CDATA[
+    <!-- ${table-name:csu_db} Entity Bean -->
+
+    <entity> 
+      <ejb-name>${table-name:csu_db}Entity</ejb-name>
+      <!-- home>com.yoonforh.ejb.mis.${function-id:lower}.${table-name:csu_db}EntityHome</home>
+      <remote>com.yoonforh.ejb.mis.${function-id:lower}.${table-name:csu_db}Entity</remote -->
+      <local-home>com.yoonforh.ejb.mis.${function-id:lower}.${table-name:csu_db}EntityLocalHome</local-home>
+      <local>com.yoonforh.ejb.mis.${function-id:lower}.${table-name:csu_db}EntityLocal</local>
+      <ejb-class>com.yoonforh.ejb.mis.${function-id:lower}.${table-name:csu_db}EntityBean</ejb-class>
+      <persistence-type>Bean</persistence-type>
+      <prim-key-class>com.yoonforh.ejb.mis.${function-id:lower}.${table-name:csu_db}EntityPK</prim-key-class>
+      <reentrant>False</reentrant>
+
+      <resource-ref>
+        <description>JDBC connection pool</description>
+        <res-ref-name>jdbc/${pool-name}</res-ref-name>
+	<res-type>javax.sql.DataSource</res-type>
+        <res-auth>Container</res-auth>
+        <res-sharing-scope>Shareable</res-sharing-scope>
+      </resource-ref>
+
+    </entity>
+]]></param>
+      </handler>
+    </var>
+    <var name="ejb-entity-security-roles-block">
+      <handler type="yoonforh.codegen.handler.DBCodeHandler">
+        <param name="input-type">sql-sheet</param>
+        <param name="code-type">code-block</param>
+        <param name="iteration-type">table</param>
+        <param name="sql-sheet-path-key">sql-sheet</param>
+        <param name="code-block"><![CDATA[
+    <security-role>
+      <role-name>${table-name:db}</role-name>  
+    </security-role>
+]]></param>
+      </handler>
+    </var>
+    <var name="ejb-entity-method-permissions-block">
+      <handler type="yoonforh.codegen.handler.DBCodeHandler">
+        <param name="input-type">sql-sheet</param>
+        <param name="code-type">code-block</param>
+        <param name="iteration-type">table</param>
+        <param name="sql-sheet-path-key">sql-sheet</param>
+        <param name="code-block"><![CDATA[
+    <method-permission>
+      <role-name>${table-name:db}</role-name>
+      <method>
+        <ejb-name>${table-name:csu_db}Entity</ejb-name>
+        <method-name>*</method-name>
+      </method>
+    </method-permission>
+]]></param>
+      </handler>
+    </var>
+    <var name="ejb-entity-container-transactions-block">
+      <handler type="yoonforh.codegen.handler.DBCodeHandler">
+        <param name="input-type">sql-sheet</param>
+        <param name="code-type">code-block</param>
+        <param name="iteration-type">table</param>
+        <param name="sql-sheet-path-key">sql-sheet</param>
+        <param name="code-block"><![CDATA[
+    <container-transaction>
+      <method>
+        <ejb-name>${table-name:csu_db}Entity</ejb-name>
+        <method-name>*</method-name>
+      </method>
+      <trans-attribute>Required</trans-attribute>
+    </container-transaction>
+]]></param>
+      </handler>
+    </var>
+  </doc-info>
+
+  <doc-info>
+    <zip-path>ts/deployment/weblogic-ejb-jar.xml</zip-path>
+    <description>WebLogic EJB Jar deployment descriptor</description>
+    <rel-path>%%function-id:lower%%/deployment/weblogic-ejb-jar.xml</rel-path>
+    <var name="app-name" />
+    <var name="pool-name" />
+    <var name="ejb-local-ref-to-entities-block">
+      <handler type="yoonforh.codegen.handler.DBCodeHandler">
+        <param name="input-type">sql-sheet</param>
+        <param name="code-type">code-block</param>
+        <param name="sql-sheet-path-key">sql-sheet</param>
+        <param name="iteration-type">table</param>
+        <param name="code-block"><![CDATA[
+      <ejb-local-reference-description>
+        <ejb-ref-name>ejb/${function-id:lower}/${table-name:csu_db}EntityLocal</ejb-ref-name>
+        <jndi-name>${function-id:lower}/${table-name:csu_db}EntityLocal</jndi-name>
+      </ejb-local-reference-description>
+]]></param>
+      </handler>
+    </var>
+    <var name="ejb-entities-block">
+      <handler type="yoonforh.codegen.handler.DBCodeHandler">
+        <param name="input-type">sql-sheet</param>
+        <param name="code-type">code-block</param>
+        <param name="iteration-type">table</param>
+        <param name="sql-sheet-path-key">sql-sheet</param>
+        <param name="code-block"><![CDATA[
+  <!-- ${table-name:csu_db} Entity bean -->
+
+  <weblogic-enterprise-bean>
+
+    <ejb-name>${table-name:csu_db}Entity</ejb-name>
+
+    <reference-descriptor>
+      <!-- JDBC data source reference -->
+      <resource-description>
+        <res-ref-name>jdbc/${pool-name}</res-ref-name>
+        <jndi-name>${app-name}-dataSource-${pool-name}</jndi-name>
+      </resource-description>
+    </reference-descriptor>
+
+    <jndi-name>${function-id:lower}/${table-name:csu_db}Entity</jndi-name>
+    <local-jndi-name>${function-id:lower}/${table-name:csu_db}EntityLocal</local-jndi-name>
+
+  </weblogic-enterprise-bean>
+]]></param>
+      </handler>
+    </var>
+    <var name="ejb-entity-security-role-assignments-block">
+      <handler type="yoonforh.codegen.handler.DBCodeHandler">
+        <param name="input-type">sql-sheet</param>
+        <param name="code-type">code-block</param>
+        <param name="iteration-type">table</param>
+        <param name="sql-sheet-path-key">sql-sheet</param>
+        <param name="code-block"><![CDATA[
+  <security-role-assignment>
+    <role-name>${table-name:db}</role-name>
+    <principal-name>${table-name:db}</principal-name>
+  </security-role-assignment>
+]]></param>
+      </handler>
+    </var>
+  </doc-info>
+
+  <doc-info>
+    <zip-path>ts/src/com/yoonforh/ejb/mis/ts/TSSessionBean.java</zip-path>
+    <description>Meta session bean class</description>
+    <rel-path>%%function-id:lower%%/src/com/yoonforh/ejb/mis/%%function-id:lower%%/%%function-id:upper%%SessionBean.java</rel-path>
+    <var name="company" />
+    <var name="function-id" />
+    <var name="timestamp" />
+  </doc-info>
+
+  <doc-info>
+    <zip-path>ts/src/com/yoonforh/ejb/mis/ts/TSSession.java</zip-path>
+    <description>Meta session bean remote interface</description>
+    <rel-path>%%function-id:lower%%/src/com/yoonforh/ejb/mis/%%function-id:lower%%/%%function-id:upper%%Session.java</rel-path>
+    <var name="company" />
+    <var name="function-id" />
+    <var name="timestamp" />
+  </doc-info>
+
+  <doc-info>
+    <zip-path>ts/src/com/yoonforh/ejb/mis/ts/TSSessionHome.java</zip-path>
+    <description>Meta session bean remote home interface</description>
+    <rel-path>%%function-id:lower%%/src/com/yoonforh/ejb/mis/%%function-id:lower%%/%%function-id:upper%%SessionHome.java</rel-path>
+    <var name="company" />
+    <var name="function-id" />
+    <var name="timestamp" />
+  </doc-info>
+
+  <doc-info>
+    <zip-path>ts/src/com/yoonforh/ejb/mis/ts/TSSessionLocal.java</zip-path>
+    <description>Meta session bean local interface</description>
+    <rel-path>%%function-id:lower%%/src/com/yoonforh/ejb/mis/%%function-id:lower%%/%%function-id:upper%%SessionLocal.java</rel-path>
+    <var name="company" />
+    <var name="function-id" />
+    <var name="timestamp" />
+  </doc-info>
+
+  <doc-info>
+    <zip-path>ts/src/com/yoonforh/ejb/mis/ts/TSSessionLocalHome.java</zip-path>
+    <description>Meta session bean local home interface</description>
+    <rel-path>%%function-id:lower%%/src/com/yoonforh/ejb/mis/%%function-id:lower%%/%%function-id:upper%%SessionLocalHome.java</rel-path>
+    <var name="company" />
+    <var name="function-id" />
+    <var name="timestamp" />
+  </doc-info>
+
+  <doc-info>
+    <zip-path>ts/src/com/yoonforh/ejb/mis/ts/ProjectNoEntityBean.java</zip-path>
+    <description>Meta entity bean class</description>
+    <processor type="yoonforh.codegen.meta.processor.MetaMultiProcessor">
+      <param name="repeat">table</param>
+      <param name="sql-sheet-path-key">sql-sheet</param>
+      <param name="function-id-key">function-id</param>
+      <param name="table-var-name">table-name</param>
+    </processor>
+    <rel-path>%%function-id:lower%%/src/com/yoonforh/ejb/mis/%%function-id:lower%%/%%table-name:csu_db%%EntityBean.java</rel-path>
+    <var name="field-name-put-block">
+      <handler type="yoonforh.codegen.handler.DBCodeHandler">
+        <param name="input-type">sql-sheet</param>
+        <param name="code-type">code-block</param>
+	<param name="sql-sheet-path-key">sql-sheet</param>
+        <param name="iteration-type">field</param>
+        <param name="table-id-key">table-name</param>
+        <param name="code-block"><![CDATA[
+	FIELD_MAP.put("${field-name}", ${field-java-fqdn}.class);
+]]>
+	</param>
+      </handler>
+    </var>
+    <var name="key-field-names-block">
+      <handler type="yoonforh.codegen.handler.DBCodeHandler">
+        <param name="input-type">sql-sheet</param>
+        <param name="code-type">code-block</param>
+	<param name="sql-sheet-path-key">sql-sheet</param>
+        <param name="iteration-type">pk-field</param>
+        <param name="table-id-key">table-name</param>
+        <param name="iteration-suffix"><![CDATA[,
+]]>
+	</param>
+        <param name="code-block"><![CDATA[
+	"${field-name}"]]>
+	</param>
+      </handler>
+    </var>
+    <var name="pk-get-block">
+      <handler type="yoonforh.codegen.handler.DBCodeHandler">
+        <param name="input-type">sql-sheet</param>
+        <param name="code-type">code-block</param>
+	<param name="sql-sheet-path-key">sql-sheet</param>
+        <param name="iteration-type">pk-field</param>
+        <param name="table-id-key">table-name</param>
+        <param name="iteration-suffix"><![CDATA[,
+]]>
+	</param>
+        <param name="code-block"><![CDATA[
+	    (${field-java-fqdn}) JDBCUtil.convertStringParam(FIELD_MAP, "${field-name}", dataMap)]]>
+	</param>
+      </handler>
+    </var>
+    <var name="pk-values-block">
+      <handler type="yoonforh.codegen.handler.DBCodeHandler">
+        <param name="input-type">sql-sheet</param>
+        <param name="code-type">code-block</param>
+	<param name="sql-sheet-path-key">sql-sheet</param>
+        <param name="iteration-type">pk-field</param>
+        <param name="table-id-key">table-name</param>
+        <param name="code-block"><![CDATA[
+	    keyValues[${iteration-index}] = key.${field-name:csl_};]]>
+	</param>
+      </handler>
+    </var>
+    <var name="pk-string-values-block">
+      <handler type="yoonforh.codegen.handler.DBCodeHandler">
+        <param name="input-type">sql-sheet</param>
+        <param name="code-type">code-block</param>
+	<param name="sql-sheet-path-key">sql-sheet</param>
+        <param name="iteration-type">pk-field</param>
+        <param name="table-id-key">table-name</param>
+        <param name="code-block"><![CDATA[
+	    keyValues[${iteration-index}] = (String) dataMap.get(KEY_FIELDS[${iteration-index}]);]]>
+	</param>
+      </handler>
+    </var>
+  </doc-info>
+
+  <doc-info>
+    <zip-path>ts/src/com/yoonforh/ejb/mis/ts/ProjectNoEntityLocal.java</zip-path>
+    <description>Meta entity bean local interface</description>
+    <processor type="yoonforh.codegen.meta.processor.MetaMultiProcessor">
+      <param name="repeat">table</param>
+      <param name="sql-sheet-path-key">sql-sheet</param>
+      <param name="function-id-key">function-id</param>
+      <param name="table-var-name">table-name</param>
+    </processor>
+    <rel-path>%%function-id:lower%%/src/com/yoonforh/ejb/mis/%%function-id:lower%%/%%table-name:csu_db%%EntityLocal.java</rel-path>
+  </doc-info>
+
+  <doc-info>
+    <zip-path>ts/src/com/yoonforh/ejb/mis/ts/ProjectNoEntityLocalHome.java</zip-path>
+    <description>Meta entity bean local home interface</description>
+    <processor type="yoonforh.codegen.meta.processor.MetaMultiProcessor">
+      <param name="repeat">table</param>
+      <param name="sql-sheet-path-key">sql-sheet</param>
+      <param name="function-id-key">function-id</param>
+      <param name="table-var-name">table-name</param>
+    </processor>
+    <rel-path>%%function-id:lower%%/src/com/yoonforh/ejb/mis/%%function-id:lower%%/%%table-name:csu_db%%EntityLocalHome.java</rel-path>
+  </doc-info>
+
+  <doc-info>
+    <zip-path>ts/src/com/yoonforh/ejb/mis/ts/ProjectNoEntityPK.java</zip-path>
+    <description>Meta entity bean primary key class</description>
+    <processor type="yoonforh.codegen.meta.processor.MetaMultiProcessor">
+      <param name="repeat">table</param>
+      <param name="sql-sheet-path-key">sql-sheet</param>
+      <param name="function-id-key">function-id</param>
+      <param name="table-var-name">table-name</param>
+    </processor>
+    <rel-path>%%function-id:lower%%/src/com/yoonforh/ejb/mis/%%function-id:lower%%/%%table-name:csu_db%%EntityPK.java</rel-path>
+    <var name="pk-decl-block">
+      <handler type="yoonforh.codegen.handler.DBCodeHandler">
+        <param name="input-type">sql-sheet</param>
+        <param name="code-type">code-block</param>
+	<param name="sql-sheet-path-key">sql-sheet</param>
+        <param name="iteration-type">pk-field</param>
+        <param name="table-id-key">table-name</param>
+        <param name="code-block"><![CDATA[
+    public ${field-java-fqdn} ${field-name:csl_};
+]]>
+	</param>
+      </handler>
+    </var>
+    <var name="pk-args-block">
+      <handler type="yoonforh.codegen.handler.DBCodeHandler">
+        <param name="input-type">sql-sheet</param>
+        <param name="code-type">code-block</param>
+	<param name="sql-sheet-path-key">sql-sheet</param>
+        <param name="iteration-type">pk-field</param>
+        <param name="table-id-key">table-name</param>
+        <param name="iteration-suffix"><![CDATA[,
+]]>
+	</param>
+        <param name="code-block"><![CDATA[
+	${field-java-fqdn} ${field-name:csl_}]]>
+	</param>
+      </handler>
+    </var>
+    <var name="pk-init-block">
+      <handler type="yoonforh.codegen.handler.DBCodeHandler">
+        <param name="input-type">sql-sheet</param>
+        <param name="code-type">code-block</param>
+	<param name="sql-sheet-path-key">sql-sheet</param>
+        <param name="iteration-type">pk-field</param>
+        <param name="table-id-key">table-name</param>
+        <param name="code-block"><![CDATA[
+	this.${field-name:csl_} = ${field-name:csl_};
+]]>
+	</param>
+      </handler>
+    </var>
+    <var name="pk-hashmap-init-block">
+      <handler type="yoonforh.codegen.handler.DBCodeHandler">
+        <param name="input-type">sql-sheet</param>
+        <param name="code-type">code-block</param>
+	<param name="sql-sheet-path-key">sql-sheet</param>
+        <param name="iteration-type">pk-field</param>
+        <param name="table-id-key">table-name</param>
+        <param name="code-block"><![CDATA[
+	this.${field-name:csl_} = (${field-java-fqdn}) JDBCUtil.convertStringParam((String) dataMap.get("${field-name}"), ${field-java-fqdn}.class);
+]]>
+	</param>
+      </handler>
+    </var>
+    <var name="pk-to-string-block">
+      <handler type="yoonforh.codegen.handler.DBCodeHandler">
+        <param name="input-type">sql-sheet</param>
+        <param name="code-type">code-block</param>
+	<param name="sql-sheet-path-key">sql-sheet</param>
+        <param name="iteration-type">pk-field</param>
+        <param name="table-id-key">table-name</param>
+        <param name="iteration-suffix"><![CDATA[ + '-' + ]]></param>
+        <param name="code-block"><![CDATA[${field-name:csl_}.toString()]]></param>
+        <param name="code-block-primitive"><![CDATA[String.valueOf(${field-name:csl_})]]></param>
+      </handler>
+    </var>
+    <var name="pk-equals-block">
+      <handler type="yoonforh.codegen.handler.DBCodeHandler">
+        <param name="input-type">sql-sheet</param>
+        <param name="code-type">code-block</param>
+	<param name="sql-sheet-path-key">sql-sheet</param>
+        <param name="iteration-type">pk-field</param>
+        <param name="table-id-key">table-name</param>
+        <param name="iteration-prefix"><![CDATA[
+	   && ]]></param>
+        <param name="code-block"><![CDATA[((${table-name:csu_db}EntityPK) obj).${field-name:csl_}.equals(${field-name:csl_})]]>
+	</param>
+        <param name="code-block-primitive"><![CDATA[(((${table-name:csu_db}EntityPK) obj).${field-name:csl_} == ${field-name:csl_})]]>
+	</param>
+      </handler>
+    </var>
+  </doc-info>
+
+</template-info>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE template-info PUBLIC
+	"-//Yoon Kyung Koo.//DTD Template Information 1.0//EN"
+	"http://java.freehosting.co.kr/dtd/template_info_1_0.dtd">
+
+<!--
+  sample template.xml
+-->
+
+
+<template-info>
+  <name>easy</name>
+  <description>EASY Framework Template</description>
+  <variables>
+    <root-path-var id="root" default="true">Source Root</root-path-var>
+    <global-var id="package-directory">Package Directory</global-var>
+    <global-var id="package-name">Package Name</global-var>
+    <global-var id="company">Company Name (e.g, YoonForH Corp.)</global-var>
+    <global-var id="message">Message String</global-var>
+  </variables>
+
+  <doc-info>
+    <zip-path>easy/Hello.java</zip-path>
+    <description>Hello World source code</description>
+    <rel-path>%%package-directory%%/Hello.java</rel-path>
+    <var name="message">
+      <handler type="yoonforh.codegen.handler.LowerCase"/>
+    </var>
+  </doc-info>
+
+</template-info>

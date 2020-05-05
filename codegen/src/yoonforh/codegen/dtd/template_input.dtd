@@ -1,0 +1,49 @@
+<!--
+ $Id: template_input.dtd,v 1.1.1.1 2003/05/26 01:53:54 cvsuser Exp $
+
+ Copyright (c) 2003 by Yoon Kyung Koo.
+ All rights reserved.
+ 
+ This software is the confidential and proprietary information
+ of Yoon Kyung Koo("Confidential Information").  You
+ shall not disclose such Confidential Information and shall use
+ it only in accordance with the terms of the license agreement
+ you entered into with Yoon Kyung Koo.
+
+________________________________________________________________
+
+Template Input Sheets for batch code generator
+This dtd should have following DOCTYPE
+
+  <!DOCTYPE template-input PUBLIC
+	"-//Yoon Kyung Koo.//DTD Template Input Sheet 1.0//EN"
+	"http://java.freehosting.co.kr/dtd/template_input_1_0.dtd">
+
+-->
+
+<!-- root element -->
+<!ELEMENT template-input (template, input-sheet+)>
+
+<!-- template name -->
+<!ELEMENT template (#PCDATA)>
+
+<!-- sheet declaration -->
+<!ELEMENT input-sheet (root-path+, charset*, variables*)>
+
+<!-- each root path value -->
+<!ELEMENT root-path (#PCDATA)>
+
+<!ATTLIST root-path
+	id ID #REQUIRED>
+
+<!-- each charset value -->
+<!ELEMENT charset (#PCDATA)>
+
+<!ATTLIST charset
+	id ID #REQUIRED>
+
+<!-- each variable value -->
+<!ELEMENT var (#PCDATA)>
+
+<!ATTLIST var
+	id ID #REQUIRED>

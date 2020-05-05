@@ -1,0 +1,111 @@
+<!--
+ $Id: template_info.dtd,v 1.1.1.1 2003/05/26 01:53:54 cvsuser Exp $
+
+ Copyright (c) 2003 by Yoon Kyung Koo.
+ All rights reserved.
+ 
+ This software is the confidential and proprietary information
+ of Yoon Kyung Koo("Confidential Information").  You
+ shall not disclose such Confidential Information and shall use
+ it only in accordance with the terms of the license agreement
+ you entered into with Yoon Kyung Koo.
+
+________________________________________________________________
+
+Template Information defintions for code generator
+This dtd should have following DOCTYPE
+
+  <!DOCTYPE template-info PUBLIC
+	"-//Yoon Kyung Koo.//DTD Template Information 1.0//EN"
+	"http://java.freehosting.co.kr/dtd/template_info_1_0.dtd">
+
+-->
+<!-- parameter entity declaration -->
+<!ENTITY % Boolean "(true | false)">
+
+<!-- variable type -->
+<!ENTITY % VarType "(string | csv | empty | file | directory)">
+
+<!-- A "ClassName" is the fully qualified name of a Java class that is
+     instantiated to provide the functionality of the enclosing element.
+-->
+<!ENTITY % ClassName "CDATA">
+
+<!-- root element -->
+<!ELEMENT template-info (name, description?, variables?, doc-info+)>
+
+<!-- name -->
+<!ELEMENT name (#PCDATA)>
+
+<!-- brief description -->
+<!ELEMENT description (#PCDATA)>
+
+<!-- variables declaration which should be filled on generation time if no default given -->
+<!ELEMENT variables (root-path-var*, charset-var*, global-var*)>
+
+<!-- doc-info information -->
+<!ELEMENT doc-info (zip-path, description?, processor?, rel-path?, root-path?, charset?, var*)>
+
+<!-- root path variables declaration -->
+<!ELEMENT root-path-var (#PCDATA)>
+
+<!-- if this root path is default path (value should be 'true', if given) -->
+<!ATTLIST root-path-var
+	id ID #REQUIRED
+	default %Boolean; #IMPLIED>
+
+<!-- charset variables declaration -->
+<!ELEMENT charset-var (#PCDATA)>
+
+<!ATTLIST charset-var
+	id ID #REQUIRED>
+
+<!-- global regex variables declaration -->
+<!ELEMENT global-var (#PCDATA)>
+
+<!ATTLIST global-var
+	id ID #REQUIRED
+	type %VarType; #IMPLIED>
+
+<!-- zip path as a doc-info identifier -->
+<!ELEMENT zip-path (#PCDATA)>
+
+<!-- file contents processor. this is used for overriding default -->
+<!-- behavior of the code generator using this zip file -->
+<!ELEMENT processor (param*)>
+
+<!-- fully qualified processor class name -->
+<!ATTLIST processor
+	type %ClassName; #REQUIRED>
+
+<!-- relative path of the doc-info. if rel-path is not given then the -->
+<!-- relative path in the template jar file will be used -->
+<!ELEMENT rel-path (#PCDATA)>
+
+<!-- root path of the doc-info. this should be one of the declared root-path-vars -->
+<!ELEMENT root-path (#PCDATA)>
+
+<!-- charset variable of the doc-info. this should be one of the -->
+<!-- declared charset-vars -->
+<!ELEMENT charset (#PCDATA)>
+
+<!-- variables declared in this doc-info where text handlers will be -->
+<!-- applied. every variables should be declared as a global-var, too -->
+<!ELEMENT var (handler*)>
+
+<!-- var name which corresponds to one of global-var ids -->
+<!ATTLIST var
+	name CDATA #REQUIRED>
+
+<!-- if the variable needs further treatment by given handler class -->
+<!ELEMENT handler (param*)>
+
+<!-- fully qualified handler class name -->
+<!ATTLIST handler
+	type %ClassName; #REQUIRED>
+
+<!-- handler parameters -->
+<!ELEMENT param (#PCDATA)>
+
+<!ATTLIST param
+	name CDATA #REQUIRED>
